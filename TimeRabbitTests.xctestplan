@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "97BF678A-8BC1-4EAE-86F5-34ECDDF1BA07",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:TimeRabbit.xcodeproj",
+        "identifier" : "036DA4E72E6ADFF100383A68",
+        "name" : "TimeRabbitTests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -1,0 +1,80 @@
+//
+//  EditHistoryViewModelSimpleTests.swift
+//  TimeRabbitTests
+//
+//  Created by Takumi Ikeda on 2025/08/09.
+//
+
+import Testing
+import Foundation
+@testable import TimeRabbit
+
+@MainActor
+struct EditHistoryViewModelSimpleTests {
+  
+  @Test("ViewModel initializes correctly")
+  func testViewModelInitialization() async {
+    let mockProjectRepo = MockProjectRepository(withSampleData: true)
+    let projects = try! mockProjectRepo.fetchProjects()
+    let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: true)
+    
+    let viewModel = EditHistoryViewModel(
+      timeRecordRepository: mockTimeRecordRepo,
+      projectRepository: mockProjectRepo
+    )
+    
+    // Basic state verification
+    #expect(viewModel.editingRecord == nil)
+    #expect(viewModel.selectedProject == nil)
+    #expect(viewModel.showingEditSheet == false)
+    #expect(viewModel.showingDeleteAlert == false)
+  }
+  
+  @Test("Time range validation works")
+  func testTimeRangeValidation() async {
+    let mockProjectRepo = MockProjectRepository(withSampleData: true)
+    let projects = try! mockProjectRepo.fetchProjects()
+    let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: true)
+    
+    let viewModel = EditHistoryViewModel(
+      timeRecordRepository: mockTimeRecordRepo,
+      projectRepository: mockProjectRepo
+    )
+    
+    // Test valid time range
+    viewModel.startTime = Calendar.current.date(byAdding: .hour, value: -2, to: Date())!
+    viewModel.endTime = Calendar.current.date(byAdding: .hour, value: -1, to: Date())!
+    
+    #expect(viewModel.isValidTimeRange == true)
+    
+    // Test invalid time range (start after end)
+    viewModel.startTime = Calendar.current.date(byAdding: .hour, value: -1, to: Date())!
+    viewModel.endTime = Calendar.current.date(byAdding: .hour, value: -2, to: Date())!
+    
+    #expect(viewModel.isValidTimeRange == false)
+  }
+  
+  @Test("Duration formatting works correctly")
+  func testDurationFormatting() async {
+    let mockProjectRepo = MockProjectRepository(withSampleData: true)
+    let projects = try! mockProjectRepo.fetchProjects()
+    let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: true)
+    
+    let viewModel = EditHistoryViewModel(
+      timeRecordRepository: mockTimeRecordRepo,
+      projectRepository: mockProjectRepo
+    )
+    
+    // Test hours and minutes
+    viewModel.startTime = Date()
+    viewModel.endTime = Calendar.current.date(byAdding: .hour, value: 2, to: viewModel.startTime)!
+    viewModel.endTime = Calendar.current.date(byAdding: .minute, value: 30, to: viewModel.endTime)!
+    
+    #expect(viewModel.formattedDuration == "2時間30分")
+    
+    // Test minutes only
+    viewModel.endTime = Calendar.current.date(byAdding: .minute, value: 45, to: viewModel.startTime)!
+    
+    #expect(viewModel.formattedDuration == "45分")
+  }
+}

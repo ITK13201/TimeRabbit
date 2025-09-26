@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		036DA5952E6AE53300383A68 /* TimeRabbitTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 036DA5942E6AE53300383A68 /* TimeRabbitTests.xctestplan */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		036DA4E92E6ADFF100383A68 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,9 +28,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		036DA4D82E6ADFF000383A68 /* TimeRabbit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TimeRabbit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		036DA4D82E6ADFF000383A68 /* TimeRabbit.dev.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TimeRabbit.dev.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		036DA4E82E6ADFF100383A68 /* TimeRabbitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TimeRabbitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		036DA4F22E6ADFF100383A68 /* TimeRabbitUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TimeRabbitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		036DA5942E6AE53300383A68 /* TimeRabbitTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = TimeRabbitTests.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +80,7 @@
 		036DA4CF2E6ADFF000383A68 = {
 			isa = PBXGroup;
 			children = (
+				036DA5942E6AE53300383A68 /* TimeRabbitTests.xctestplan */,
 				036DA4DA2E6ADFF000383A68 /* TimeRabbit */,
 				036DA4EB2E6ADFF100383A68 /* TimeRabbitTests */,
 				036DA4F52E6ADFF100383A68 /* TimeRabbitUITests */,
@@ -85,7 +91,7 @@
 		036DA4D92E6ADFF000383A68 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				036DA4D82E6ADFF000383A68 /* TimeRabbit.app */,
+				036DA4D82E6ADFF000383A68 /* TimeRabbit.dev.app */,
 				036DA4E82E6ADFF100383A68 /* TimeRabbitTests.xctest */,
 				036DA4F22E6ADFF100383A68 /* TimeRabbitUITests.xctest */,
 			);
@@ -114,7 +120,7 @@
 			packageProductDependencies = (
 			);
 			productName = TimeRabbit;
-			productReference = 036DA4D82E6ADFF000383A68 /* TimeRabbit.app */;
+			productReference = 036DA4D82E6ADFF000383A68 /* TimeRabbit.dev.app */;
 			productType = "com.apple.product-type.application";
 		};
 		036DA4E72E6ADFF100383A68 /* TimeRabbitTests */ = {
@@ -212,6 +218,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				036DA5952E6AE53300383A68 /* TimeRabbitTests.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -405,8 +412,9 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "dev.i-tk.TimeRabbit";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = "dev.i-tk.TimeRabbit.dev";
+				PRODUCT_MODULE_NAME = TimeRabbit;
+				PRODUCT_NAME = "$(TARGET_NAME).dev";
 				REGISTER_APP_GROUPS = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -452,7 +460,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TimeRabbit.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/TimeRabbit";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TimeRabbit.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/TimeRabbit.dev";
 			};
 			name = Debug;
 		};
