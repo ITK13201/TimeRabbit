@@ -33,6 +33,10 @@ struct ContentView: View {
                   .font(.title2)
                   .foregroundColor(getProjectColor(from: viewModel.getCurrentProjectColor()))
                   .lineLimit(1)
+                  
+                Text("[作業区分: \(viewModel.getCurrentJobName())]")
+                  .font(.caption)
+                  .foregroundColor(.secondary)
 
                 Text(formatDuration(viewModel.getCurrentDuration()))
                   .font(.title)

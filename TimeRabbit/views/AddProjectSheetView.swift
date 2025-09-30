@@ -18,13 +18,25 @@ struct AddProjectSheetView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
-      Text("新しいプロジェクト")
+      Text("新しい案件")
         .font(.title2)
         .fontWeight(.bold)
 
       VStack(alignment: .leading, spacing: 8) {
-        Text("プロジェクト名")
-        TextField("プロジェクト名を入力", text: $viewModel.projectName)
+        Text("案件ID")
+        TextField("案件IDを入力", text: $viewModel.projectId)
+          .textFieldStyle(.roundedBorder)
+        
+        if !viewModel.idValidationMessage.isEmpty {
+          Text(viewModel.idValidationMessage)
+            .font(.caption)
+            .foregroundColor(.red)
+        }
+      }
+      
+      VStack(alignment: .leading, spacing: 8) {
+        Text("案件名")
+        TextField("案件名を入力", text: $viewModel.projectName)
           .textFieldStyle(.roundedBorder)
       }
 
@@ -54,7 +66,7 @@ struct AddProjectSheetView: View {
         Button("作成") {
           viewModel.createProject()
         }
-        .disabled(!viewModel.isFormValid)
+        .disabled(!viewModel.isFormValid || !viewModel.isIdValid)
         .buttonStyle(.borderedProminent)
       }
     }

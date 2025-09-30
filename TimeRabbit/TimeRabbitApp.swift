@@ -16,6 +16,7 @@ struct TimeRabbitApp: App {
     do {
       let schema = Schema([
         Project.self,
+        Job.self,
         TimeRecord.self
       ])
       let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
@@ -30,6 +31,7 @@ struct TimeRabbitApp: App {
           try Self.resetDatabase()
           let schema = Schema([
             Project.self,
+            Job.self,
             TimeRecord.self
           ])
           let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
@@ -70,7 +72,8 @@ struct TimeRabbitApp: App {
     WindowGroup {
       let projectRepository = ProjectRepository(modelContext: modelContainer.mainContext)
       let timeRecordRepository = TimeRecordRepository(modelContext: modelContainer.mainContext)
-      let viewModelFactory = ViewModelFactory.create(with: (projectRepository, timeRecordRepository))
+      let jobRepository = JobRepository(modelContext: modelContainer.mainContext)
+      let viewModelFactory = ViewModelFactory.create(with: (projectRepository, timeRecordRepository, jobRepository))
       ContentView(viewModelFactory: viewModelFactory)
     }
     .modelContainer(modelContainer)

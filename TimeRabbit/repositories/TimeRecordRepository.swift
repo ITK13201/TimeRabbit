@@ -12,12 +12,12 @@ import SwiftUI
 // MARK: - Time Record Repository Protocol
 
 protocol TimeRecordRepositoryProtocol {
-  func startTimeRecord(for project: Project) throws -> TimeRecord
+  func startTimeRecord(for project: Project, job: Job) throws -> TimeRecord
   func stopCurrentTimeRecord() throws
   func fetchCurrentTimeRecord() throws -> TimeRecord?
   func fetchTimeRecords(for project: Project?, from startDate: Date, to endDate: Date) throws -> [TimeRecord]
   func deleteTimeRecord(_ record: TimeRecord) throws
-  func updateTimeRecord(_ record: TimeRecord, startTime: Date, endTime: Date, project: Project) throws
+  func updateTimeRecord(_ record: TimeRecord, startTime: Date, endTime: Date, project: Project, job: Job) throws
   func validateTimeRange(startTime: Date, endTime: Date, excludingRecord: TimeRecord?) throws -> Bool
 }
 
@@ -31,14 +31,17 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
   }
 
   @discardableResult
-  func startTimeRecord(for project: Project) throws -> TimeRecord {
+  func startTimeRecord(for project: Project, job: Job) throws -> TimeRecord {
+    AppLogger.repository.debug("Starting time record for project: \(project.id), job: \(job.id)")
+    
     // Stop any current recording
     try stopCurrentTimeRecord()
 
-    let record = TimeRecord(startTime: Date(), project: project)
+    let record = TimeRecord(startTime: Date(), project: project, job: job)
     modelContext.insert(record)
     do {
       try modelContext.save()
+      AppLogger.repository.info("Successfully started time record for project: \(project.id), job: \(job.id)")
     } catch {
       AppLogger.repository.error("Failed to start time record: \(error)")
       if let swiftDataError = error as? SwiftDataError {
@@ -78,7 +81,7 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
       let projectId = project.id
       descriptor = FetchDescriptor<TimeRecord>(
         predicate: #Predicate<TimeRecord> { record in
-          record.project?.id == projectId && record.startTime >= startDate && record.startTime <= endDate
+          record.projectId == projectId && record.startTime >= startDate && record.startTime <= endDate
         },
         sortBy: [SortDescriptor(\.startTime, order: .reverse)]
       )
@@ -107,11 +110,13 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
     }
   }
   
-  func updateTimeRecord(_ record: TimeRecord, startTime: Date, endTime: Date, project: Project) throws {
+  func updateTimeRecord(_ record: TimeRecord, startTime: Date, endTime: Date, project: Project, job: Job) throws {
     AppLogger.repository.debug("updateTimeRecord started")
     AppLogger.repository.debug("Original record ID: \(record.id)")
     AppLogger.repository.debug("Original record project: \(record.project?.name ?? "nil")")
+    AppLogger.repository.debug("Original record job: \(record.job?.name ?? "nil")")
     AppLogger.repository.debug("New project: \(project.name)")
+    AppLogger.repository.debug("New job: \(job.name)")
     AppLogger.repository.debug("New startTime: \(startTime)")
     AppLogger.repository.debug("New endTime: \(endTime)")
     
@@ -125,17 +130,23 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
     AppLogger.repository.debug("Before update - record.startTime: \(record.startTime)")
     AppLogger.repository.debug("Before update - record.endTime: \(record.endTime ?? Date())")
     AppLogger.repository.debug("Before update - record.project: \(record.project?.name ?? "nil")")
+    AppLogger.repository.debug("Before update - record.job: \(record.job?.name ?? "nil")")
     
     record.startTime = startTime
     record.endTime = endTime
     record.project = project
+    record.job = job
+    record.projectId = project.id
     record.projectName = project.name
     record.projectColor = project.color
+    record.jobId = job.id
+    record.jobName = job.name
     
     // 保存後の状態をログ
     AppLogger.repository.debug("After update - record.startTime: \(record.startTime)")
     AppLogger.repository.debug("After update - record.endTime: \(record.endTime ?? Date())")
     AppLogger.repository.debug("After update - record.project: \(record.project?.name ?? "nil")")
+    AppLogger.repository.debug("After update - record.job: \(record.job?.name ?? "nil")")
     AppLogger.swiftData.debug("About to save to ModelContext")
     
     do {

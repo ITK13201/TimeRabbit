@@ -15,11 +15,15 @@ class ProjectRowViewModel: BaseViewModel {
   
   @Published var project: Project
   @Published var isActive: Bool = false
+  @Published var selectedJob: Job?
+  @Published var availableJobs: [Job] = []
   
   // MARK: - Dependencies
   
   private let projectRepository: ProjectRepositoryProtocol
   private let timeRecordRepository: TimeRecordRepositoryProtocol
+  private let jobRepository: JobRepositoryProtocol
+  private let userDefaults = UserDefaults.standard
   
   // MARK: - Callbacks
   
@@ -31,12 +35,16 @@ class ProjectRowViewModel: BaseViewModel {
   
   init(project: Project, 
        projectRepository: ProjectRepositoryProtocol, 
-       timeRecordRepository: TimeRecordRepositoryProtocol) {
+       timeRecordRepository: TimeRecordRepositoryProtocol,
+       jobRepository: JobRepositoryProtocol) {
     self.project = project
     self.projectRepository = projectRepository
     self.timeRecordRepository = timeRecordRepository
+    self.jobRepository = jobRepository
     super.init()
     
+    loadAvailableJobs()
+    loadSavedJobSelection()
     updateActiveStatus()
   }
   
@@ -46,7 +54,7 @@ class ProjectRowViewModel: BaseViewModel {
     if let currentRecord = withLoadingSync({
       try timeRecordRepository.fetchCurrentTimeRecord()
     }) {
-      isActive = currentRecord?.project?.id == project.id
+      isActive = currentRecord?.projectId == project.id
     } else {
       isActive = false
     }
@@ -55,8 +63,13 @@ class ProjectRowViewModel: BaseViewModel {
   // MARK: - Actions
   
   func startTracking() {
+    guard let selectedJob = selectedJob else {
+      AppLogger.viewModel.warning("No job selected for project: \(project.id)")
+      return
+    }
+    
     if let _ = withLoadingSync({
-      try timeRecordRepository.startTimeRecord(for: project)
+      try timeRecordRepository.startTimeRecord(for: project, job: selectedJob)
     }) {
       isActive = true
       onTrackingStarted?(project)
@@ -75,6 +88,42 @@ class ProjectRowViewModel: BaseViewModel {
       try projectRepository.deleteProject(project)
     }) {
       onProjectDeleted?(project)
+    }
+  }
+  
+  // MARK: - Job Management
+  
+  func loadAvailableJobs() {
+    if let jobs = withLoadingSync({
+      try jobRepository.fetchAllJobs()
+    }) {
+      availableJobs = jobs
+    }
+  }
+  
+  func updateSelectedJob(_ job: Job) {
+    selectedJob = job
+    saveJobSelection()
+    AppLogger.viewModel.debug("Updated selected job for project \(self.project.id): \(job.name)")
+  }
+  
+  func loadSavedJobSelection() {
+    let savedJobId = userDefaults.string(forKey: "selectedJob_\(self.project.id)")
+    if let savedJobId = savedJobId,
+       let savedJob = availableJobs.first(where: { $0.id == savedJobId }) {
+      selectedJob = savedJob
+      AppLogger.viewModel.debug("Loaded saved job selection for project \(self.project.id): \(savedJob.name)")
+    } else {
+      // デフォルトは「開発」(001)
+      selectedJob = availableJobs.first { $0.id == "001" }
+      AppLogger.viewModel.debug("Set default job selection for project \(self.project.id): 開発")
+    }
+  }
+  
+  private func saveJobSelection() {
+    if let selectedJob = selectedJob {
+      userDefaults.set(selectedJob.id, forKey: "selectedJob_\(self.project.id)")
+      AppLogger.viewModel.debug("Saved job selection for project \(self.project.id): \(selectedJob.name)")
     }
   }
 }

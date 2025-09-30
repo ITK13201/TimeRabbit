@@ -17,11 +17,13 @@ class EditHistoryViewModel: BaseViewModel {
   
   @Published var editingRecord: TimeRecord?
   @Published var selectedProject: Project?
+  @Published var selectedJob: Job?
   @Published var startTime: Date = Date()
   @Published var endTime: Date = Date()
   @Published var showingEditSheet = false
   @Published var showingDeleteAlert = false
   @Published var availableProjects: [Project] = []
+  @Published var availableJobs: [Job] = []
   
   // MARK: - Computed Properties
   
@@ -50,7 +52,7 @@ class EditHistoryViewModel: BaseViewModel {
   }
   
   var canSave: Bool {
-    return selectedProject != nil && isValidTimeRange && !isLoading
+    return selectedProject != nil && selectedJob != nil && isValidTimeRange && !isLoading
   }
   
   var canDelete: Bool {
@@ -61,15 +63,19 @@ class EditHistoryViewModel: BaseViewModel {
   
   private let timeRecordRepository: TimeRecordRepositoryProtocol
   private let projectRepository: ProjectRepositoryProtocol
+  private let jobRepository: JobRepositoryProtocol
   
   // MARK: - Initialization
   
   init(timeRecordRepository: TimeRecordRepositoryProtocol, 
-       projectRepository: ProjectRepositoryProtocol) {
+       projectRepository: ProjectRepositoryProtocol,
+       jobRepository: JobRepositoryProtocol) {
     self.timeRecordRepository = timeRecordRepository
     self.projectRepository = projectRepository
+    self.jobRepository = jobRepository
     super.init()
     loadAvailableProjects()
+    loadAvailableJobs()
   }
   
   // MARK: - Actions
@@ -82,18 +88,21 @@ class EditHistoryViewModel: BaseViewModel {
     
     editingRecord = record
     selectedProject = record.project
+    selectedJob = record.job
     startTime = record.startTime
     endTime = record.endTime ?? Date()
     showingEditSheet = true
     clearError()
     
-    // 編集開始時に最新のプロジェクト一覧を再読み込み
+    // 編集開始時に最新のプロジェクト・作業区分一覧を再読み込み
     loadAvailableProjects()
+    loadAvailableJobs()
   }
   
   func saveChanges() {
     guard let record = editingRecord,
-          let project = selectedProject else {
+          let project = selectedProject,
+          let job = selectedJob else {
       handleError(EditHistoryError.missingData)
       return
     }
@@ -103,7 +112,8 @@ class EditHistoryViewModel: BaseViewModel {
         record,
         startTime: startTime,
         endTime: endTime,
-        project: project
+        project: project,
+        job: job
       )
     }
     
@@ -167,12 +177,22 @@ class EditHistoryViewModel: BaseViewModel {
     }
   }
   
+  private func loadAvailableJobs() {
+    if let jobs = withLoadingSync({
+      try jobRepository.fetchAllJobs()
+    }) {
+      availableJobs = jobs
+    }
+  }
+  
   private func resetEditingState() {
     editingRecord = nil
     selectedProject = nil
+    selectedJob = nil
     startTime = Date()
     endTime = Date()
     availableProjects = []
+    availableJobs = []
   }
   
   // MARK: - Validation

@@ -22,10 +22,36 @@ struct ProjectRowView: View {
         .fill(getProjectColor(from: viewModel.project.color))
         .frame(width: 12, height: 12)
 
-      Text(viewModel.project.name)
-        .foregroundColor(viewModel.isActive ? .primary : .secondary)
-
+      VStack(alignment: .leading, spacing: 2) {
+        Text(viewModel.project.id)
+          .font(.caption)
+          .foregroundColor(.secondary)
+        Text(viewModel.project.name)
+          .foregroundColor(viewModel.isActive ? .primary : .secondary)
+      }
+      
       Spacer()
+      
+      // 作業区分選択プルダウン
+      if !viewModel.isActive {
+        Picker("作業区分", selection: $viewModel.selectedJob) {
+          ForEach(viewModel.availableJobs, id: \.id) { job in
+            Text(job.name)
+              .tag(job as Job?)
+          }
+        }
+        .pickerStyle(.menu)
+        .frame(width: 120)
+        .onChange(of: viewModel.selectedJob) { _, newJob in
+          if let newJob = newJob {
+            viewModel.updateSelectedJob(newJob)
+          }
+        }
+      } else {
+        Text("作業中: \(viewModel.selectedJob?.name ?? "")")
+          .font(.caption)
+          .foregroundColor(.green)
+      }
 
       if viewModel.isActive {
         Button("実行中") {
@@ -39,6 +65,7 @@ struct ProjectRowView: View {
           viewModel.startTracking()
         }
         .buttonStyle(.borderless)
+        .disabled(viewModel.selectedJob == nil)
       }
 
       Button(action: {

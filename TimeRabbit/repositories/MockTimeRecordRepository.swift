@@ -15,42 +15,45 @@ class MockTimeRecordRepository: TimeRecordRepositoryProtocol {
   private var timeRecords: [TimeRecord] = []
   private var currentRecord: TimeRecord?
   private let projects: [Project]
+  private let jobs: [Job]
   
   init(projects: [Project], withSampleData: Bool = false) {
     self.projects = projects
+    // 固定Jobを初期化
+    self.jobs = Job.predefinedJobs.map { Job(id: $0.0, name: $0.1) }
     if withSampleData {
       setupSampleTimeRecords()
     }
   }
   
   private func setupSampleTimeRecords() {
-    guard projects.count >= 3 else { return }
+    guard projects.count >= 3 && jobs.count >= 3 else { return }
     
     let calendar = Calendar.current
     let today = Date()
     let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
     
     // 今日の記録
-    let record1 = TimeRecord(startTime: calendar.date(byAdding: .hour, value: -3, to: today)!, project: projects[0])
+    let record1 = TimeRecord(startTime: calendar.date(byAdding: .hour, value: -3, to: today)!, project: projects[0], job: jobs[0]) // 開発
     record1.endTime = calendar.date(byAdding: .hour, value: -1, to: today)!
     
-    let record2 = TimeRecord(startTime: calendar.date(byAdding: .minute, value: -30, to: today)!, project: projects[1])
+    let record2 = TimeRecord(startTime: calendar.date(byAdding: .minute, value: -30, to: today)!, project: projects[1], job: jobs[1]) // 保守
     record2.endTime = calendar.date(byAdding: .minute, value: -10, to: today)!
     
     // 昨日の記録
-    let record3 = TimeRecord(startTime: calendar.date(byAdding: .hour, value: -4, to: yesterday)!, project: projects[2])
+    let record3 = TimeRecord(startTime: calendar.date(byAdding: .hour, value: -4, to: yesterday)!, project: projects[2], job: jobs[3]) // デザイン
     record3.endTime = calendar.date(byAdding: .hour, value: -2, to: yesterday)!
     
     // 現在実行中の記録
-    let currentRecord = TimeRecord(startTime: calendar.date(byAdding: .minute, value: -5, to: today)!, project: projects[0])
+    let currentRecord = TimeRecord(startTime: calendar.date(byAdding: .minute, value: -5, to: today)!, project: projects[0], job: jobs[0])
     self.currentRecord = currentRecord
     
     timeRecords = [record1, record2, record3, currentRecord]
   }
   
-  func startTimeRecord(for project: Project) throws -> TimeRecord {
+  func startTimeRecord(for project: Project, job: Job) throws -> TimeRecord {
     try stopCurrentTimeRecord()
-    let record = TimeRecord(startTime: Date(), project: project)
+    let record = TimeRecord(startTime: Date(), project: project, job: job)
     timeRecords.append(record)
     currentRecord = record
     return record
@@ -67,7 +70,7 @@ class MockTimeRecordRepository: TimeRecordRepositoryProtocol {
   
   func fetchTimeRecords(for project: Project?, from startDate: Date, to endDate: Date) throws -> [TimeRecord] {
     return timeRecords.filter { record in
-      let matchesProject = project == nil || record.project?.id == project?.id
+      let matchesProject = project == nil || record.projectId == project?.id
       let inDateRange = record.startTime >= startDate && record.startTime <= endDate
       return matchesProject && inDateRange
     }.sorted { $0.startTime > $1.startTime }
@@ -80,7 +83,7 @@ class MockTimeRecordRepository: TimeRecordRepositoryProtocol {
     }
   }
   
-  func updateTimeRecord(_ record: TimeRecord, startTime: Date, endTime: Date, project: Project) throws {
+  func updateTimeRecord(_ record: TimeRecord, startTime: Date, endTime: Date, project: Project, job: Job) throws {
     guard try validateTimeRange(startTime: startTime, endTime: endTime, excludingRecord: record) else {
       throw TimeRecordError.invalidTimeRange
     }
@@ -88,8 +91,12 @@ class MockTimeRecordRepository: TimeRecordRepositoryProtocol {
     record.startTime = startTime
     record.endTime = endTime
     record.project = project
+    record.job = job
+    record.projectId = project.id
     record.projectName = project.name
     record.projectColor = project.color
+    record.jobId = job.id
+    record.jobName = job.name
   }
   
   func validateTimeRange(startTime: Date, endTime: Date, excludingRecord: TimeRecord? = nil) throws -> Bool {

@@ -14,11 +14,13 @@ import SwiftUI
 class ViewModelFactory: ObservableObject {
   private let projectRepository: ProjectRepositoryProtocol
   private let timeRecordRepository: TimeRecordRepositoryProtocol
+  private let jobRepository: JobRepositoryProtocol
   private let dateService: DateService
   
-  init(projectRepository: ProjectRepositoryProtocol, timeRecordRepository: TimeRecordRepositoryProtocol, dateService: DateService) {
+  init(projectRepository: ProjectRepositoryProtocol, timeRecordRepository: TimeRecordRepositoryProtocol, jobRepository: JobRepositoryProtocol, dateService: DateService) {
     self.projectRepository = projectRepository
     self.timeRecordRepository = timeRecordRepository
+    self.jobRepository = jobRepository
     self.dateService = dateService
   }
   
@@ -28,7 +30,8 @@ class ViewModelFactory: ObservableObject {
     return ProjectRowViewModel(
       project: project,
       projectRepository: projectRepository,
-      timeRecordRepository: timeRecordRepository
+      timeRecordRepository: timeRecordRepository,
+      jobRepository: jobRepository
     )
   }
   
@@ -43,7 +46,8 @@ class ViewModelFactory: ObservableObject {
   func createEditHistoryViewModel() -> EditHistoryViewModel {
     return EditHistoryViewModel(
       timeRecordRepository: timeRecordRepository,
-      projectRepository: projectRepository
+      projectRepository: projectRepository,
+      jobRepository: jobRepository
     )
   }
   
@@ -67,6 +71,7 @@ class ViewModelFactory: ObservableObject {
     return ContentViewModel(
       projectRepository: projectRepository,
       timeRecordRepository: timeRecordRepository,
+      jobRepository: jobRepository,
       mainContentViewModel: createMainContentViewModel(),
       addProjectViewModel: createAddProjectViewModel()
     )
@@ -76,11 +81,12 @@ class ViewModelFactory: ObservableObject {
 // MARK: - Convenience Factory Methods
 
 extension ViewModelFactory {
-  static func create(with repositories: (ProjectRepositoryProtocol, TimeRecordRepositoryProtocol)) -> ViewModelFactory {
+  static func create(with repositories: (ProjectRepositoryProtocol, TimeRecordRepositoryProtocol, JobRepositoryProtocol)) -> ViewModelFactory {
     let dateService = DateService()
     return ViewModelFactory(
       projectRepository: repositories.0,
       timeRecordRepository: repositories.1,
+      jobRepository: repositories.2,
       dateService: dateService
     )
   }

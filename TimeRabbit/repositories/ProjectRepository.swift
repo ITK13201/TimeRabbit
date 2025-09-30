@@ -13,9 +13,10 @@ import SwiftUI
 
 protocol ProjectRepositoryProtocol {
   func fetchProjects() throws -> [Project]
-  func createProject(name: String, color: String) throws -> Project
-  func updateProject(_ project: Project, name: String, color: String) throws
+  func createProject(id: String, name: String, color: String) throws -> Project
+  func updateProject(_ project: Project, id: String, name: String, color: String) throws
   func deleteProject(_ project: Project) throws
+  func isProjectIdUnique(_ id: String, excluding: Project?) throws -> Bool
 }
 
 // MARK: - Project Repository Implementation
@@ -33,11 +34,20 @@ class ProjectRepository: ProjectRepositoryProtocol, ObservableObject {
   }
 
   @discardableResult
-  func createProject(name: String, color: String = "blue") throws -> Project {
-    let project = Project(name: name, color: color)
+  func createProject(id: String, name: String, color: String = "blue") throws -> Project {
+    AppLogger.repository.debug("Creating project with ID: \(id), name: \(name)")
+    
+    // Check ID uniqueness
+    guard try isProjectIdUnique(id, excluding: nil) else {
+      AppLogger.repository.error("Project ID \(id) already exists")
+      throw ProjectError.duplicateId
+    }
+    
+    let project = Project(id: id, name: name, color: color)
     modelContext.insert(project)
     do {
       try modelContext.save()
+      AppLogger.repository.info("Successfully created project: \(id)")
     } catch {
       AppLogger.repository.error("Failed to save project: \(error)")
       if let swiftDataError = error as? SwiftDataError {
@@ -48,17 +58,30 @@ class ProjectRepository: ProjectRepositoryProtocol, ObservableObject {
     return project
   }
 
-  func updateProject(_ project: Project, name: String, color: String) throws {
+  func updateProject(_ project: Project, id: String, name: String, color: String) throws {
+    AppLogger.repository.debug("Updating project: \(project.id) -> \(id)")
+    
+    // Check ID uniqueness if ID is changing
+    if project.id != id {
+      guard try isProjectIdUnique(id, excluding: project) else {
+        AppLogger.repository.error("Project ID \(id) already exists")
+        throw ProjectError.duplicateId
+      }
+    }
+    
+    let oldId = project.id
     let oldName = project.name
     let oldColor = project.color
 
+    project.id = id
     project.name = name
     project.color = color
 
     // 関連するTimeRecordの保存された情報も更新
-    let records = try fetchTimeRecordsForProject(project)
+    let records = try fetchTimeRecordsForProject(oldId)
     for record in records {
-      if record.projectName == oldName && record.projectColor == oldColor {
+      if record.projectId == oldId {
+        record.projectId = id
         record.projectName = name
         record.projectColor = color
       }
@@ -66,6 +89,7 @@ class ProjectRepository: ProjectRepositoryProtocol, ObservableObject {
 
     do {
       try modelContext.save()
+      AppLogger.repository.info("Successfully updated project: \(id)")
     } catch {
       AppLogger.repository.error("Failed to update project: \(error)")
       if let swiftDataError = error as? SwiftDataError {
@@ -88,14 +112,53 @@ class ProjectRepository: ProjectRepositoryProtocol, ObservableObject {
     }
   }
 
+  func isProjectIdUnique(_ id: String, excluding: Project?) throws -> Bool {
+    AppLogger.repository.debug("Checking uniqueness for project ID: \(id)")
+    
+    let descriptor = FetchDescriptor<Project>(
+      predicate: #Predicate<Project> { project in
+        project.id == id
+      }
+    )
+    
+    let existingProjects = try modelContext.fetch(descriptor)
+    
+    if let excluding = excluding {
+      // 編集時: 自分以外に同じIDがあるかチェック
+      let isUnique = existingProjects.allSatisfy { $0.id == excluding.id }
+      AppLogger.repository.debug("ID uniqueness check result: \(isUnique)")
+      return isUnique
+    } else {
+      // 新規作成時: 同じIDが存在しないかチェック
+      let isUnique = existingProjects.isEmpty
+      AppLogger.repository.debug("ID uniqueness check result: \(isUnique)")
+      return isUnique
+    }
+  }
+  
   // プロジェクトに関連するTimeRecordを取得するヘルパーメソッド
-  private func fetchTimeRecordsForProject(_ project: Project) throws -> [TimeRecord] {
-    let projectId = project.id
+  private func fetchTimeRecordsForProject(_ projectId: String) throws -> [TimeRecord] {
     let descriptor = FetchDescriptor<TimeRecord>(
       predicate: #Predicate<TimeRecord> { record in
-        record.project?.id == projectId
+        record.projectId == projectId
       }
     )
     return try modelContext.fetch(descriptor)
+  }
+}
+
+// MARK: - Project Errors
+
+enum ProjectError: Error {
+  case duplicateId
+  case invalidId
+  
+  var localizedDescription: String {
+    switch self {
+    case .duplicateId:
+      return "指定された案件IDは既に使用されています"
+    case .invalidId:
+      return "案件IDが無効です"
+    }
   }
 }

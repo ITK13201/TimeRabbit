@@ -26,6 +26,7 @@ class ContentViewModel: BaseViewModel {
   
   private let projectRepository: ProjectRepositoryProtocol
   private let timeRecordRepository: TimeRecordRepositoryProtocol
+  private let jobRepository: JobRepositoryProtocol
   
   // MARK: - Project Row ViewModels
   
@@ -39,10 +40,12 @@ class ContentViewModel: BaseViewModel {
   
   init(projectRepository: ProjectRepositoryProtocol,
        timeRecordRepository: TimeRecordRepositoryProtocol,
+       jobRepository: JobRepositoryProtocol,
        mainContentViewModel: MainContentViewModel,
        addProjectViewModel: AddProjectViewModel) {
     self.projectRepository = projectRepository
     self.timeRecordRepository = timeRecordRepository
+    self.jobRepository = jobRepository
     self.mainContentViewModel = mainContentViewModel
     self.addProjectViewModel = addProjectViewModel
     
@@ -50,6 +53,7 @@ class ContentViewModel: BaseViewModel {
     
     setupAddProjectCallbacks()
     startTimer()
+    initializeJobsIfNeeded()
     loadData()
   }
   
@@ -105,12 +109,19 @@ class ContentViewModel: BaseViewModel {
     }
   }
   
+  func initializeJobsIfNeeded() {
+    withLoadingSync {
+      try jobRepository.initializePredefinedJobs()
+    }
+  }
+  
   private func updateProjectRowViewModels() {
     projectRowViewModels = projects.map { project in
       let viewModel = ProjectRowViewModel(
         project: project,
         projectRepository: projectRepository,
-        timeRecordRepository: timeRecordRepository
+        timeRecordRepository: timeRecordRepository,
+        jobRepository: jobRepository
       )
       
       // コールバックを設定
@@ -189,6 +200,10 @@ class ContentViewModel: BaseViewModel {
   
   func getCurrentProjectColor() -> String {
     return currentTimeRecord?.displayProjectColor ?? "blue"
+  }
+  
+  func getCurrentJobName() -> String {
+    return currentTimeRecord?.displayJobName ?? ""
   }
   
   func getCurrentDuration() -> TimeInterval {
