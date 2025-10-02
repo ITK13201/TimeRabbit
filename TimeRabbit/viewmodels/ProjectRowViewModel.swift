@@ -64,7 +64,7 @@ class ProjectRowViewModel: BaseViewModel {
   
   func startTracking() {
     guard let selectedJob = selectedJob else {
-      AppLogger.viewModel.warning("No job selected for project: \(project.id)")
+        AppLogger.viewModel.warning("No job selected for project: \(self.project.id)")
       return
     }
     

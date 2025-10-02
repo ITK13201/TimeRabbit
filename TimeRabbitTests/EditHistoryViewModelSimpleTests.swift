@@ -17,10 +17,12 @@ struct EditHistoryViewModelSimpleTests {
     let mockProjectRepo = MockProjectRepository(withSampleData: true)
     let projects = try! mockProjectRepo.fetchProjects()
     let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: true)
-    
+    let mockJobRepo = MockJobRepository()
+
     let viewModel = EditHistoryViewModel(
       timeRecordRepository: mockTimeRecordRepo,
-      projectRepository: mockProjectRepo
+      projectRepository: mockProjectRepo,
+      jobRepository: mockJobRepo
     )
     
     // Basic state verification
@@ -35,10 +37,12 @@ struct EditHistoryViewModelSimpleTests {
     let mockProjectRepo = MockProjectRepository(withSampleData: true)
     let projects = try! mockProjectRepo.fetchProjects()
     let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: true)
-    
+    let mockJobRepo = MockJobRepository()
+
     let viewModel = EditHistoryViewModel(
       timeRecordRepository: mockTimeRecordRepo,
-      projectRepository: mockProjectRepo
+      projectRepository: mockProjectRepo,
+      jobRepository: mockJobRepo
     )
     
     // Test valid time range
@@ -59,10 +63,12 @@ struct EditHistoryViewModelSimpleTests {
     let mockProjectRepo = MockProjectRepository(withSampleData: true)
     let projects = try! mockProjectRepo.fetchProjects()
     let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: true)
-    
+    let mockJobRepo = MockJobRepository()
+
     let viewModel = EditHistoryViewModel(
       timeRecordRepository: mockTimeRecordRepo,
-      projectRepository: mockProjectRepo
+      projectRepository: mockProjectRepo,
+      jobRepository: mockJobRepo
     )
     
     // Test hours and minutes

@@ -122,7 +122,8 @@ struct ContentView: View {
   let mockProjectRepo = MockProjectRepository()
   let projects = try! mockProjectRepo.fetchProjects()
   let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects)
-  let factory = ViewModelFactory.create(with: (mockProjectRepo, mockTimeRecordRepo))
+  let mockJobRepo = MockJobRepository()
+  let factory = ViewModelFactory.create(with: (mockProjectRepo, mockTimeRecordRepo, mockJobRepo))
   ContentView(viewModelFactory: factory)
 }
 
@@ -130,6 +131,7 @@ struct ContentView: View {
   let mockProjectRepo = MockProjectRepository(withSampleData: true)
   let projects = try! mockProjectRepo.fetchProjects()
   let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: true)
-  let factory = ViewModelFactory.create(with: (mockProjectRepo, mockTimeRecordRepo))
+  let mockJobRepo = MockJobRepository()
+  let factory = ViewModelFactory.create(with: (mockProjectRepo, mockTimeRecordRepo, mockJobRepo))
   ContentView(viewModelFactory: factory)
 }

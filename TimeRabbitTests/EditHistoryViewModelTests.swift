@@ -20,10 +20,12 @@ struct EditHistoryViewModelTests {
     let mockProjectRepo = MockProjectRepository(withSampleData: true)
     let projects = try! mockProjectRepo.fetchProjects()
     let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: true)
-    
+    let mockJobRepo = MockJobRepository()
+
     let viewModel = EditHistoryViewModel(
       timeRecordRepository: mockTimeRecordRepo,
-      projectRepository: mockProjectRepo
+      projectRepository: mockProjectRepo,
+      jobRepository: mockJobRepo
     )
     
     let timeRecords = try! mockTimeRecordRepo.fetchTimeRecords(
@@ -75,9 +77,14 @@ struct EditHistoryViewModelTests {
   @Test("Should not edit incomplete record")
   func testStartEditingIncompleteRecord() async {
     let (viewModel, _, mockTimeRecordRepo, projects, _) = createTestSetup()
-    
+
+    // Get default job for testing
+    let mockJobRepo = MockJobRepository()
+    let jobs = try! mockJobRepo.fetchAllJobs()
+    let defaultJob = jobs.first { $0.id == "001" }!
+
     // Create an incomplete record (no endTime)
-    let incompleteRecord = try! mockTimeRecordRepo.startTimeRecord(for: projects[0])
+    let incompleteRecord = try! mockTimeRecordRepo.startTimeRecord(for: projects[0], job: defaultJob)
     
     viewModel.startEditing(incompleteRecord)
     

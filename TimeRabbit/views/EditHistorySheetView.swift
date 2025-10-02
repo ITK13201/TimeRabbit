@@ -200,10 +200,12 @@ struct EditHistorySheetView_Previews: PreviewProvider {
     let mockProjectRepo = MockProjectRepository(withSampleData: true)
     let mockProjects = try! mockProjectRepo.fetchProjects()
     let mockTimeRecordRepo = MockTimeRecordRepository(projects: mockProjects, withSampleData: true)
-    
+    let mockJobRepo = MockJobRepository()
+
     let viewModel = EditHistoryViewModel(
       timeRecordRepository: mockTimeRecordRepo,
-      projectRepository: mockProjectRepo
+      projectRepository: mockProjectRepo,
+      jobRepository: mockJobRepo
     )
     
     // サンプルレコードを設定
