@@ -17,7 +17,7 @@ struct ProjectRowView: View {
   }
 
   var body: some View {
-    HStack {
+    HStack(spacing: 8) {
       Circle()
         .fill(getProjectColor(from: viewModel.project.color))
         .frame(width: 12, height: 12)
@@ -26,12 +26,15 @@ struct ProjectRowView: View {
         Text(viewModel.project.id)
           .font(.caption)
           .foregroundColor(.secondary)
+          .lineLimit(1)
         Text(viewModel.project.name)
           .foregroundColor(viewModel.isActive ? .primary : .secondary)
+          .lineLimit(1)
       }
-      
+      .frame(maxWidth: 100, alignment: .leading)
+
       Spacer()
-      
+
       // 作業区分選択プルダウン
       if !viewModel.isActive {
         Picker("作業区分", selection: $viewModel.selectedJob) {
@@ -41,7 +44,7 @@ struct ProjectRowView: View {
           }
         }
         .pickerStyle(.menu)
-        .frame(width: 120)
+        .frame(width: 100)
         .onChange(of: viewModel.selectedJob) { _, newJob in
           if let newJob = newJob {
             viewModel.updateSelectedJob(newJob)
@@ -51,6 +54,8 @@ struct ProjectRowView: View {
         Text("作業中: \(viewModel.selectedJob?.name ?? "")")
           .font(.caption)
           .foregroundColor(.green)
+          .lineLimit(1)
+          .frame(width: 100, alignment: .leading)
       }
 
       if viewModel.isActive {
@@ -60,12 +65,14 @@ struct ProjectRowView: View {
         .buttonStyle(.borderless)
         .foregroundColor(.green)
         .disabled(true)
+        .frame(width: 50)
       } else {
         Button("開始") {
           viewModel.startTracking()
         }
         .buttonStyle(.borderless)
         .disabled(viewModel.selectedJob == nil)
+        .frame(width: 50)
       }
 
       Button(action: {
@@ -75,6 +82,7 @@ struct ProjectRowView: View {
           .foregroundColor(.red)
       }
       .buttonStyle(.borderless)
+      .frame(width: 30)
     }
     .padding(.vertical, 4)
   }

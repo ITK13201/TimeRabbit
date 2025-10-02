@@ -97,7 +97,7 @@ struct ContentView: View {
         Spacer()
       }
       .padding()
-      .frame(minWidth: 250)
+      .frame(minWidth: 400)
     } detail: {
       // Main content
       MainContentView(viewModel: viewModel.mainContentViewModel)
