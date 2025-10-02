@@ -13,7 +13,7 @@ import Combine
 class StatisticsViewModel: BaseViewModel {
   // MARK: - Published Properties
   
-  @Published var projectTimes: [(String, String, TimeInterval)] = []
+  @Published var projectJobTimes: [(String, String, String, TimeInterval)] = [] // (projectName, jobName, projectColor, duration)
   @Published var totalTime: TimeInterval = 0
   
   // MARK: - Dependencies
@@ -61,21 +61,22 @@ class StatisticsViewModel: BaseViewModel {
     }) {
       // 完了した記録のみを対象にする
       let completedRecords = records.filter { $0.endTime != nil }
-      
-      // プロジェクト名と色でグループ化
+
+      // プロジェクト名 + 作業区分でグループ化
       let groupedRecords = Dictionary(grouping: completedRecords) { record in
-        "\(record.displayProjectName)_\(record.displayProjectColor)"
+        "\(record.displayProjectName)_\(record.displayJobName)_\(record.displayProjectColor)"
       }
-      
+
       // 統計データを計算
-      projectTimes = groupedRecords.map { (key, records) in
+      projectJobTimes = groupedRecords.map { (key, records) in
         let firstRecord = records.first!
         let projectName = firstRecord.displayProjectName
+        let jobName = firstRecord.displayJobName
         let projectColor = firstRecord.displayProjectColor
         let totalTime = records.reduce(0) { $0 + $1.duration }
-        return (projectName, projectColor, totalTime)
-      }.sorted { $0.2 > $1.2 } // 時間順でソート
-      
+        return (projectName, jobName, projectColor, totalTime)
+      }.sorted { $0.3 > $1.3 } // 時間順でソート
+
       // 総作業時間を計算
       totalTime = completedRecords.reduce(0) { $0 + $1.duration }
     }
@@ -124,7 +125,7 @@ class StatisticsViewModel: BaseViewModel {
   }
   
   var hasData: Bool {
-    return !projectTimes.isEmpty
+    return !projectJobTimes.isEmpty
   }
   
   func getFormattedTotalTime() -> String {
@@ -138,19 +139,19 @@ class StatisticsViewModel: BaseViewModel {
   func generateStatisticsText() -> String {
     let dateText = getFormattedDate()
     let totalTimeText = getFormattedTotalTime()
-    
+
     var result = "# \(dateText) の作業統計\n\n"
     result += "**総作業時間**: \(totalTimeText)\n\n"
-    
-    if !projectTimes.isEmpty {
-      result += "## プロジェクト別作業時間\n\n"
-      for (projectName, _, duration) in projectTimes {
+
+    if !projectJobTimes.isEmpty {
+      result += "## 案件・作業区分別作業時間\n\n"
+      for (projectName, jobName, _, duration) in projectJobTimes {
         let formattedDuration = getFormattedDuration(duration)
         let percentage = String(format: "%.1f", getPercentage(for: duration))
-        result += "- **\(projectName)**: \(formattedDuration) (\(percentage)%)\n"
+        result += "- **\(projectName)** - \(jobName): \(formattedDuration) (\(percentage)%)\n"
       }
     }
-    
+
     return result
   }
 }

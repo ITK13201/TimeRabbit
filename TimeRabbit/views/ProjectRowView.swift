@@ -11,7 +11,7 @@ import SwiftUI
 
 struct ProjectRowView: View {
   @StateObject private var viewModel: ProjectRowViewModel
-  
+
   init(viewModel: ProjectRowViewModel) {
     self._viewModel = StateObject(wrappedValue: viewModel)
   }
@@ -26,12 +26,10 @@ struct ProjectRowView: View {
         Text(viewModel.project.id)
           .font(.caption)
           .foregroundColor(.secondary)
-          .lineLimit(1)
         Text(viewModel.project.name)
           .foregroundColor(viewModel.isActive ? .primary : .secondary)
-          .lineLimit(1)
       }
-      .frame(maxWidth: 100, alignment: .leading)
+      .fixedSize(horizontal: true, vertical: false)
 
       Spacer()
 
@@ -54,7 +52,6 @@ struct ProjectRowView: View {
         }
       } else {
         Text("作業中: \(viewModel.selectedJob?.name ?? "")")
-          .font(.caption)
           .foregroundColor(.green)
           .lineLimit(1)
           .frame(width: 100, alignment: .leading)
@@ -74,7 +71,7 @@ struct ProjectRowView: View {
         }
         .buttonStyle(.borderless)
         .disabled(viewModel.selectedJob == nil)
-        .frame(width: 50)
+        .frame(width: 30)
       }
 
       Button(action: {
@@ -84,7 +81,7 @@ struct ProjectRowView: View {
           .foregroundColor(.red)
       }
       .buttonStyle(.borderless)
-      .frame(width: 30)
+      .frame(width: 20)
     }
     .padding(.vertical, 4)
   }

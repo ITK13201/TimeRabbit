@@ -21,10 +21,15 @@ struct HistoryRowView: View {
         .fill(getProjectColor(from: record.displayProjectColor))
         .frame(width: 12, height: 12)
 
-      // プロジェクト名
-      Text(record.displayProjectName)
-        .font(.headline)
-        .frame(minWidth: 120, alignment: .leading)
+      // プロジェクト名と作業区分
+      VStack(alignment: .leading, spacing: 4) {
+        Text(record.displayProjectName)
+          .font(.headline)
+        Text(record.displayJobName)
+          .font(.caption)
+          .foregroundColor(.secondary)
+      }
+      .frame(minWidth: 120, alignment: .leading)
 
       Spacer()
 

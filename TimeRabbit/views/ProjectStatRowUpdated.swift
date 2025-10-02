@@ -11,6 +11,7 @@ import SwiftUI
 
 struct ProjectStatRowUpdated: View {
   let projectName: String
+  let jobName: String
   let projectColor: String
   let duration: TimeInterval
   let percentage: Double
@@ -22,8 +23,13 @@ struct ProjectStatRowUpdated: View {
           .fill(getProjectColor(from: projectColor))
           .frame(width: 16, height: 16)
 
-        Text(projectName)
-          .font(.headline)
+        VStack(alignment: .leading, spacing: 2) {
+          Text(projectName)
+            .font(.headline)
+          Text(jobName)
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
 
         Spacer()
 

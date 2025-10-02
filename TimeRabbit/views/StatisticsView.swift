@@ -69,12 +69,13 @@ struct StatisticsView: View {
 
           ScrollView {
             LazyVStack(spacing: 8) {
-              ForEach(Array(viewModel.projectTimes.enumerated()), id: \.offset) { index, item in
-                let (projectName, projectColor, duration) = item
+              ForEach(Array(viewModel.projectJobTimes.enumerated()), id: \.offset) { index, item in
+                let (projectName, jobName, projectColor, duration) = item
                 let percentage = viewModel.getPercentage(for: duration)
 
                 ProjectStatRowUpdated(
                   projectName: projectName,
+                  jobName: jobName,
                   projectColor: projectColor,
                   duration: duration,
                   percentage: percentage
@@ -149,4 +150,13 @@ struct StatisticsView: View {
     .padding()
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
   }
+}
+
+#Preview {
+  let mockProjectRepo = MockProjectRepository(withSampleData: true)
+  let projects = try! mockProjectRepo.fetchProjects()
+  let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: true)
+  let mockJobRepo = MockJobRepository()
+  let factory = ViewModelFactory.create(with: (mockProjectRepo, mockTimeRecordRepo, mockJobRepo))
+  StatisticsView(viewModel: factory.createStatisticsViewModel())
 }

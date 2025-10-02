@@ -106,3 +106,12 @@ struct HistoryView: View {
     }
   }
 }
+
+#Preview {
+  let mockProjectRepo = MockProjectRepository(withSampleData: true)
+  let projects = try! mockProjectRepo.fetchProjects()
+  let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: true)
+  let mockJobRepo = MockJobRepository()
+  let factory = ViewModelFactory.create(with: (mockProjectRepo, mockTimeRecordRepo, mockJobRepo))
+  HistoryView(viewModel: factory.createHistoryViewModel())
+}
