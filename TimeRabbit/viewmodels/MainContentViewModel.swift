@@ -53,6 +53,24 @@ class MainContentViewModel: BaseViewModel {
     self.statisticsViewModel = statisticsViewModel
     self.historyViewModel = historyViewModel
     super.init()
+    setupEditHistoryObservation()
+  }
+
+  // MARK: - Observation Setup
+
+  private var cancellables = Set<AnyCancellable>()
+
+  private func setupEditHistoryObservation() {
+    // EditHistoryViewModelのシート状態を監視して、編集完了時に統計を更新
+    historyViewModel.editHistoryViewModel.$showingEditSheet
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] isShowing in
+        if !isShowing {
+          // 編集シートが閉じられたら統計も更新
+          self?.statisticsViewModel.refreshData()
+        }
+      }
+      .store(in: &cancellables)
   }
   
   // MARK: - Tab Management

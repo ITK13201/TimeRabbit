@@ -77,6 +77,27 @@ struct HistoryView: View {
 
           ScrollView {
             LazyVStack(spacing: 8) {
+              // 作業中のレコードを最初に表示
+              if let inProgressRecord = viewModel.inProgressRecord {
+                VStack(alignment: .leading, spacing: 4) {
+                  Text("作業中")
+                    .font(.caption)
+                    .foregroundColor(.green)
+                    .fontWeight(.semibold)
+                  HistoryRowView(
+                    record: inProgressRecord,
+                    onEdit: { record in
+                      editHistoryViewModel.startEditing(record)
+                    },
+                    onDelete: { record in
+                      editHistoryViewModel.startEditing(record)
+                      editHistoryViewModel.showDeleteConfirmation()
+                    }
+                  )
+                }
+              }
+
+              // 完了済みのレコード
               ForEach(viewModel.completedRecords, id: \.id) { record in
                 HistoryRowView(
                   record: record,

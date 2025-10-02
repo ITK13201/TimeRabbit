@@ -32,17 +32,25 @@ class HistoryViewModel: BaseViewModel {
   var completedRecords: [TimeRecord] {
     return dayRecords.filter { $0.endTime != nil }
   }
-  
+
+  var allRecords: [TimeRecord] {
+    return dayRecords // 完了済みと作業中の両方を含む
+  }
+
+  var inProgressRecord: TimeRecord? {
+    return dayRecords.first { $0.endTime == nil }
+  }
+
   var totalDayTime: TimeInterval {
     return completedRecords.reduce(0) { $0 + $1.duration }
   }
-  
+
   var hasRecords: Bool {
-    return !completedRecords.isEmpty
+    return !dayRecords.isEmpty
   }
-  
+
   var recordCount: Int {
-    return completedRecords.count
+    return dayRecords.count
   }
   
   // MARK: - Initialization

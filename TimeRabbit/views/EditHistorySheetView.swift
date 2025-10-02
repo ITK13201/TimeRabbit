@@ -109,17 +109,17 @@ struct EditHistorySheetView: View {
           HStack {
             Text("開始時間")
               .frame(width: 80, alignment: .leading)
-            
+
             DatePicker("", selection: $viewModel.startTime, displayedComponents: [.date, .hourAndMinute])
               .datePickerStyle(CompactDatePickerStyle())
-            
+
             VStack(spacing: 2) {
               Button("+15分") {
                 viewModel.adjustStartTime(by: 15)
               }
               .font(.caption2)
               .buttonStyle(BorderedButtonStyle())
-              
+
               Button("-15分") {
                 viewModel.adjustStartTime(by: -15)
               }
@@ -127,27 +127,40 @@ struct EditHistorySheetView: View {
               .buttonStyle(BorderedButtonStyle())
             }
           }
-          
-          // 終了時間
-          HStack {
-            Text("終了時間")
-              .frame(width: 80, alignment: .leading)
-            
-            DatePicker("", selection: $viewModel.endTime, displayedComponents: [.date, .hourAndMinute])
-              .datePickerStyle(CompactDatePickerStyle())
-            
-            VStack(spacing: 2) {
-              Button("+15分") {
-                viewModel.adjustEndTime(by: 15)
+
+          // 終了時間（作業中の場合は編集不可）
+          if viewModel.editingRecord?.endTime != nil {
+            HStack {
+              Text("終了時間")
+                .frame(width: 80, alignment: .leading)
+
+              DatePicker("", selection: $viewModel.endTime, displayedComponents: [.date, .hourAndMinute])
+                .datePickerStyle(CompactDatePickerStyle())
+
+              VStack(spacing: 2) {
+                Button("+15分") {
+                  viewModel.adjustEndTime(by: 15)
+                }
+                .font(.caption2)
+                .buttonStyle(BorderedButtonStyle())
+
+                Button("-15分") {
+                  viewModel.adjustEndTime(by: -15)
+                }
+                .font(.caption2)
+                .buttonStyle(BorderedButtonStyle())
               }
-              .font(.caption2)
-              .buttonStyle(BorderedButtonStyle())
-              
-              Button("-15分") {
-                viewModel.adjustEndTime(by: -15)
-              }
-              .font(.caption2)
-              .buttonStyle(BorderedButtonStyle())
+            }
+          } else {
+            HStack {
+              Text("終了時間")
+                .frame(width: 80, alignment: .leading)
+
+              Text("作業中")
+                .foregroundColor(.green)
+                .fontWeight(.semibold)
+
+              Spacer()
             }
           }
         }

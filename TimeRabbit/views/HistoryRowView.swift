@@ -51,33 +51,32 @@ struct HistoryRowView: View {
       }
       
       // 編集ボタン
-      if record.endTime != nil {
-        Button(action: {
-          onEdit(record)
-        }) {
-          Image(systemName: "pencil")
-            .font(.system(size: 14, weight: .medium))
-            .foregroundColor(.secondary)
-            .frame(width: 40, height: 40)
-            .background(Color.secondary.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-        }
-        .buttonStyle(PlainButtonStyle())
-        .contentShape(Rectangle())
+      Button(action: {
+        onEdit(record)
+      }) {
+        Image(systemName: "pencil")
+          .font(.system(size: 14, weight: .medium))
+          .foregroundColor(.secondary)
+          .frame(width: 40, height: 40)
+          .background(Color.secondary.opacity(0.1))
+          .clipShape(RoundedRectangle(cornerRadius: 8))
       }
+      .buttonStyle(PlainButtonStyle())
+      .contentShape(Rectangle())
     }
     .padding(.horizontal, 16)
     .padding(.vertical, 12)
-    .background(Color(nsColor: .controlBackgroundColor))
+    .background(record.endTime == nil ? Color.green.opacity(0.1) : Color(nsColor: .controlBackgroundColor))
     .cornerRadius(8)
     .contextMenu {
+      Button("編集") {
+        onEdit(record)
+      }
+
+      // 作業中のレコードは削除不可
       if record.endTime != nil {
-        Button("編集") {
-          onEdit(record)
-        }
-        
         Divider()
-        
+
         Button("削除", role: .destructive) {
           onDelete(record)
         }

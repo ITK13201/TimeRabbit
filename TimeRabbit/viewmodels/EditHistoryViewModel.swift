@@ -81,11 +81,6 @@ class EditHistoryViewModel: BaseViewModel {
   // MARK: - Actions
   
   func startEditing(_ record: TimeRecord) {
-    guard record.endTime != nil else {
-      handleError(EditHistoryError.recordNotCompleted)
-      return
-    }
-    
     editingRecord = record
     selectedProject = record.project
     selectedJob = record.job
@@ -93,7 +88,7 @@ class EditHistoryViewModel: BaseViewModel {
     endTime = record.endTime ?? Date()
     showingEditSheet = true
     clearError()
-    
+
     // 編集開始時に最新のプロジェクト・作業区分一覧を再読み込み
     loadAvailableProjects()
     loadAvailableJobs()

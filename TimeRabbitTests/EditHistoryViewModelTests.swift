@@ -16,7 +16,7 @@ struct EditHistoryViewModelTests {
   
   // MARK: - Setup Helper
   
-  private func createTestSetup() -> (EditHistoryViewModel, MockProjectRepository, MockTimeRecordRepository, [Project], [TimeRecord]) {
+  private func createTestSetup() -> (EditHistoryViewModel, MockProjectRepository, MockTimeRecordRepository, MockJobRepository, [Project], [TimeRecord]) {
     let mockProjectRepo = MockProjectRepository(withSampleData: true)
     let projects = try! mockProjectRepo.fetchProjects()
     let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: true)
@@ -27,21 +27,21 @@ struct EditHistoryViewModelTests {
       projectRepository: mockProjectRepo,
       jobRepository: mockJobRepo
     )
-    
+
     let timeRecords = try! mockTimeRecordRepo.fetchTimeRecords(
       for: nil,
       from: Calendar.current.startOfDay(for: Date()),
       to: Date()
     ).filter { $0.endTime != nil } // Only completed records
-    
-    return (viewModel, mockProjectRepo, mockTimeRecordRepo, projects, timeRecords)
+
+    return (viewModel, mockProjectRepo, mockTimeRecordRepo, mockJobRepo, projects, timeRecords)
   }
   
   // MARK: - Initialization Tests
   
   @Test("ViewModel should initialize correctly")
   func testInitialization() async {
-    let (viewModel, _, _, projects, _) = createTestSetup()
+    let (viewModel, _, _, _, projects, _) = createTestSetup()
 
     // Wait a moment for async initialization
     try! await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
@@ -59,7 +59,7 @@ struct EditHistoryViewModelTests {
   
   @Test("Should start editing completed record")
   func testStartEditingCompletedRecord() async {
-    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+    let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
 
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
@@ -77,9 +77,9 @@ struct EditHistoryViewModelTests {
     #expect(viewModel.errorMessage == nil)
   }
   
-  @Test("Should not edit incomplete record")
+  @Test("Should edit incomplete record (in-progress)")
   func testStartEditingIncompleteRecord() async {
-    let (viewModel, _, mockTimeRecordRepo, projects, _) = createTestSetup()
+    let (viewModel, _, mockTimeRecordRepo, _, projects, _) = createTestSetup()
 
     // Get default job for testing
     let mockJobRepo = MockJobRepository()
@@ -88,19 +88,21 @@ struct EditHistoryViewModelTests {
 
     // Create an incomplete record (no endTime)
     let incompleteRecord = try! mockTimeRecordRepo.startTimeRecord(for: projects[0], job: defaultJob)
-    
+
     viewModel.startEditing(incompleteRecord)
-    
-    #expect(viewModel.editingRecord == nil)
-    #expect(viewModel.showingEditSheet == false)
-    #expect(viewModel.errorMessage != nil)
+
+    // 作業中のレコードも編集可能になった
+    #expect(viewModel.editingRecord?.id == incompleteRecord.id)
+    #expect(viewModel.showingEditSheet == true)
+    #expect(viewModel.errorMessage == nil)
+    #expect(viewModel.startTime == incompleteRecord.startTime)
   }
   
   // MARK: - Validation Tests
   
   @Test("Should validate valid time range")
   func testValidTimeRange() async {
-    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+    let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
     
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
@@ -119,7 +121,7 @@ struct EditHistoryViewModelTests {
   
   @Test("Should invalidate time range where start > end")
   func testInvalidTimeRangeStartAfterEnd() async {
-    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+    let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
     
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
@@ -138,7 +140,7 @@ struct EditHistoryViewModelTests {
   
   @Test("Should invalidate future time")
   func testInvalidFutureTime() async {
-    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+    let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
     
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
@@ -157,7 +159,7 @@ struct EditHistoryViewModelTests {
   
   @Test("Should invalidate too short duration")
   func testInvalidTooShortDuration() async {
-    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+    let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
     
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
@@ -178,7 +180,7 @@ struct EditHistoryViewModelTests {
   
   @Test("Should adjust start time correctly")
   func testAdjustStartTime() async {
-    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+    let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
     
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
@@ -196,7 +198,7 @@ struct EditHistoryViewModelTests {
   
   @Test("Should adjust end time correctly")
   func testAdjustEndTime() async {
-    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+    let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
     
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
@@ -216,7 +218,7 @@ struct EditHistoryViewModelTests {
   
   @Test("Should save valid changes")
   func testSaveValidChanges() async {
-    let (viewModel, _, _, projects, timeRecords) = createTestSetup()
+    let (viewModel, _, _, _, projects, timeRecords) = createTestSetup()
     
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
@@ -239,7 +241,7 @@ struct EditHistoryViewModelTests {
   
   @Test("Should not save when missing required data")
   func testSaveWithMissingData() async {
-    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+    let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
 
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
@@ -259,7 +261,7 @@ struct EditHistoryViewModelTests {
 
   @Test("Should not save when missing job")
   func testSaveWithMissingJob() async {
-    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+    let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
 
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
@@ -276,12 +278,149 @@ struct EditHistoryViewModelTests {
     #expect(viewModel.errorMessage != nil)
     #expect(viewModel.showingEditSheet == true)
   }
+
+  // MARK: - Time Overlap Validation Tests
+
+  @Test("Should allow same minute start/end times (within 60 seconds)")
+  func testAllowSameMinuteStartEnd() async {
+    // Create fresh setup without sample data to avoid time conflicts
+    let mockProjectRepo = MockProjectRepository(withSampleData: true)
+    let projects = try! mockProjectRepo.fetchProjects()
+    let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: false) // No sample data
+    let mockJobRepo = MockJobRepository()
+
+    let viewModel = EditHistoryViewModel(
+      timeRecordRepository: mockTimeRecordRepo,
+      projectRepository: mockProjectRepo,
+      jobRepository: mockJobRepo
+    )
+
+    let jobs = try! mockJobRepo.fetchAllJobs()
+    let defaultJob = jobs.first { $0.id == "001" }!
+
+    // Create first record: 10:00:00 - 11:00:03
+    let baseTime = Calendar.current.date(byAdding: .hour, value: -10, to: Date())!
+    let firstStart = baseTime
+    let firstEnd = Calendar.current.date(byAdding: .hour, value: 1, to: firstStart)!
+      .addingTimeInterval(3) // Add 3 seconds
+
+    let firstRecord = try! mockTimeRecordRepo.startTimeRecord(for: projects[0], job: defaultJob)
+    try! mockTimeRecordRepo.stopCurrentTimeRecord() // Stop it first
+    try! mockTimeRecordRepo.updateTimeRecord(firstRecord, startTime: firstStart, endTime: firstEnd, project: projects[0], job: defaultJob)
+
+    // Create second record with temporary time, then edit to target time
+    let secondRecord = try! mockTimeRecordRepo.startTimeRecord(for: projects[1], job: defaultJob)
+    try! mockTimeRecordRepo.stopCurrentTimeRecord() // Stop it before editing
+
+    // Edit second record to be 36 seconds after first ends
+    let secondStart = firstEnd.addingTimeInterval(36)
+    let secondEnd = Calendar.current.date(byAdding: .hour, value: 1, to: secondStart)!
+
+    viewModel.startEditing(secondRecord)
+    viewModel.startTime = secondStart
+    viewModel.endTime = secondEnd
+
+    // Should be valid (within 60 seconds is allowed)
+    #expect(viewModel.isValidTimeRange == true)
+
+    viewModel.saveChanges()
+
+    #expect(viewModel.errorMessage == nil)
+    #expect(viewModel.showingEditSheet == false)
+  }
+
+  @Test("Should reject overlapping times (more than 60 seconds overlap)")
+  func testRejectOverlappingTimes() async {
+    // Create fresh setup without sample data to avoid time conflicts
+    let mockProjectRepo = MockProjectRepository(withSampleData: true)
+    let projects = try! mockProjectRepo.fetchProjects()
+    let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: false)
+    let mockJobRepo = MockJobRepository()
+
+    let viewModel = EditHistoryViewModel(
+      timeRecordRepository: mockTimeRecordRepo,
+      projectRepository: mockProjectRepo,
+      jobRepository: mockJobRepo
+    )
+
+    let jobs = try! mockJobRepo.fetchAllJobs()
+    let defaultJob = jobs.first { $0.id == "001" }!
+
+    // Create first record: 10:00:00 - 11:00:00
+    let baseTime = Calendar.current.date(byAdding: .hour, value: -10, to: Date())!
+    let firstStart = baseTime
+    let firstEnd = Calendar.current.date(byAdding: .hour, value: 1, to: firstStart)!
+
+    let firstRecord = try! mockTimeRecordRepo.startTimeRecord(for: projects[0], job: defaultJob)
+    try! mockTimeRecordRepo.stopCurrentTimeRecord()
+    try! mockTimeRecordRepo.updateTimeRecord(firstRecord, startTime: firstStart, endTime: firstEnd, project: projects[0], job: defaultJob)
+
+    // Try to edit second record: 10:58:00 - 12:00:00 (overlaps by 2 minutes)
+    let secondStart = Calendar.current.date(byAdding: .minute, value: -2, to: firstEnd)!
+    let secondEnd = Calendar.current.date(byAdding: .hour, value: 1, to: secondStart)!
+
+    let secondRecord = try! mockTimeRecordRepo.startTimeRecord(for: projects[1], job: defaultJob)
+    try! mockTimeRecordRepo.stopCurrentTimeRecord()
+
+    viewModel.startEditing(secondRecord)
+    viewModel.startTime = secondStart
+    viewModel.endTime = secondEnd
+
+    // Should save but validation will fail
+    viewModel.saveChanges()
+
+    #expect(viewModel.errorMessage != nil)
+    #expect(viewModel.showingEditSheet == true)
+  }
+
+  @Test("Should allow exact same time (0 second difference)")
+  func testAllowExactSameTime() async {
+    // Create fresh setup without sample data to avoid time conflicts
+    let mockProjectRepo = MockProjectRepository(withSampleData: true)
+    let projects = try! mockProjectRepo.fetchProjects()
+    let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: false)
+    let mockJobRepo = MockJobRepository()
+
+    let viewModel = EditHistoryViewModel(
+      timeRecordRepository: mockTimeRecordRepo,
+      projectRepository: mockProjectRepo,
+      jobRepository: mockJobRepo
+    )
+
+    let jobs = try! mockJobRepo.fetchAllJobs()
+    let defaultJob = jobs.first { $0.id == "001" }!
+
+    // Create first record: 10:00:00 - 11:00:00
+    let baseTime = Calendar.current.date(byAdding: .hour, value: -10, to: Date())!
+    let firstStart = baseTime
+    let firstEnd = Calendar.current.date(byAdding: .hour, value: 1, to: firstStart)!
+
+    let firstRecord = try! mockTimeRecordRepo.startTimeRecord(for: projects[0], job: defaultJob)
+    try! mockTimeRecordRepo.stopCurrentTimeRecord()
+    try! mockTimeRecordRepo.updateTimeRecord(firstRecord, startTime: firstStart, endTime: firstEnd, project: projects[0], job: defaultJob)
+
+    // Edit second record: 11:00:00 - 12:00:00 (exact same time as first ends)
+    let secondStart = firstEnd
+    let secondEnd = Calendar.current.date(byAdding: .hour, value: 1, to: secondStart)!
+
+    let secondRecord = try! mockTimeRecordRepo.startTimeRecord(for: projects[1], job: defaultJob)
+    try! mockTimeRecordRepo.stopCurrentTimeRecord()
+
+    viewModel.startEditing(secondRecord)
+    viewModel.startTime = secondStart
+    viewModel.endTime = secondEnd
+
+    viewModel.saveChanges()
+
+    #expect(viewModel.errorMessage == nil)
+    #expect(viewModel.showingEditSheet == false)
+  }
   
   // MARK: - Job Selection Tests
 
   @Test("Should change job selection")
   func testChangeJobSelection() async {
-    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+    let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
 
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
@@ -303,7 +442,7 @@ struct EditHistoryViewModelTests {
 
   @Test("Should have all predefined jobs available")
   func testPredefinedJobsAvailable() async {
-    let (viewModel, _, _, _, _) = createTestSetup()
+    let (viewModel, _, _, _, _, _) = createTestSetup()
 
     #expect(viewModel.availableJobs.count == 5)
 
@@ -317,7 +456,7 @@ struct EditHistoryViewModelTests {
 
   @Test("Should delete record")
   func testDeleteRecord() async {
-    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+    let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
     
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
@@ -336,7 +475,7 @@ struct EditHistoryViewModelTests {
   
   @Test("Should not delete when no record selected")
   func testDeleteWithoutRecord() async {
-    let (viewModel, _, _, _, _) = createTestSetup()
+    let (viewModel, _, _, _, _, _) = createTestSetup()
     
     viewModel.deleteRecord()
     
@@ -347,7 +486,7 @@ struct EditHistoryViewModelTests {
   
   @Test("Should cancel editing")
   func testCancel() async {
-    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+    let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
 
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
@@ -370,7 +509,7 @@ struct EditHistoryViewModelTests {
   
   @Test("Should format duration correctly")
   func testFormattedDuration() async {
-    let (viewModel, _, _, _, _) = createTestSetup()
+    let (viewModel, _, _, _, _, _) = createTestSetup()
     
     // Test hours and minutes
     viewModel.startTime = Date()
@@ -389,7 +528,7 @@ struct EditHistoryViewModelTests {
   
   @Test("Should manage loading state correctly")
   func testLoadingState() async {
-    let (viewModel, _, _, _, _) = createTestSetup()
+    let (viewModel, _, _, _, _, _) = createTestSetup()
     
     #expect(viewModel.isLoading == false)
     

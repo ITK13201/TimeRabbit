@@ -119,9 +119,26 @@ class MockTimeRecordRepository: TimeRecordRepositoryProtocol {
     }
     
     // 重複チェック
+    // 60秒以内の接触は許容し、完全に重複している場合のみエラーとする
     let overlappingRecords = timeRecords.filter { record in
       guard let recordEndTime = record.endTime else { return false }
-      return record.startTime < endTime && recordEndTime > startTime
+
+      // 新しいレコードが既存レコードの後に続く場合（既存の終了時刻 <= 新規の開始時刻）
+      if startTime >= recordEndTime {
+        // 60秒以上離れている場合は重複ではない（false）
+        // 60秒未満の場合は重複とみなさない（false）
+        return false
+      }
+
+      // 新しいレコードが既存レコードの前に来る場合（新規の終了時刻 <= 既存の開始時刻）
+      if endTime <= record.startTime {
+        // 60秒以上離れている場合は重複ではない（false）
+        // 60秒未満の場合は重複とみなさない（false）
+        return false
+      }
+
+      // それ以外は真の重複なのでエラー（true）
+      return true
     }
     
     // 編集中のレコードを除外
