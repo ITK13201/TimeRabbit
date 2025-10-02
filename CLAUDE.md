@@ -66,6 +66,8 @@ Each View has its dedicated ViewModel following single responsibility principle:
 - **Shared State Management**: DateService provides synchronized date selection between statistics and history screens
 - **Copy Functionality**: Statistics screen includes Markdown-formatted data export with visual feedback
 - **Job Selection Persistence**: UserDefaults stores job selection per project for consistent user experience
+- **Auto-Refresh**: Statistics auto-refresh when history records are edited via Combine observation
+- **Flexible Time Validation**: Time overlap validation allows records within 60 seconds proximity for realistic usage patterns
 
 ## Development Commands
 
@@ -137,12 +139,19 @@ xcodebuild test -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'p
 
 6. **Record Editing**:
    - Edit completed time records (start/end time, project assignment, job assignment)
+   - Edit in-progress tasks (start time only, end time read-only)
    - Job selection in edit screen
    - Backup fields preserve deleted project/job information
+   - Time overlap validation allows records within 60 seconds of each other
 
 7. **Data Persistence**: SwiftData integration with proper model relationships (Project, Job, TimeRecord)
 
 8. **Date Synchronization**: Synchronized date selection between statistics and history screens
+
+9. **In-Progress Task Management**:
+   - Display in-progress tasks at top of history view with green background
+   - Edit button available for in-progress tasks (delete disabled until completion)
+   - Auto-refresh statistics when history records are edited
 
 ## Working with the Code
 
@@ -161,6 +170,7 @@ xcodebuild test -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'p
 - **Job Persistence**: Use UserDefaults for persisting job selection per project (key: "selectedJob_{projectId}")
 - **Testing Policy**: Execute unit tests (TimeRabbitTests/) but exclude UITests (TimeRabbitUITests/) from automated execution
 - **Logging**: Use AppLogger for structured logging (AppLogger.app, AppLogger.repository, AppLogger.viewModel, etc.)
+- **Time Validation**: Understand that time overlap validation allows 60-second proximity between records (see `validateTimeRange()` in repositories)
 
 ### Adding New Features
 
