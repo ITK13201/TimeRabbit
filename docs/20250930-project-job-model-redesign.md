@@ -332,6 +332,99 @@ class ContentViewModel: BaseViewModel {
 - プレビュー用のサンプルデータ拡張
 - テスト用の案件+作業区分組み合わせ
 
+## 実装完了記録
+
+### 実装日: 2025-10-02
+
+すべての実装フェーズが完了しました。以下は実装された機能とテスト結果です。
+
+#### Phase 1-4 完了内容
+
+**モデル層の実装**:
+- ✅ Project.id を UUID から String に変更（ユーザー編集可能）
+- ✅ Job モデルの追加（5つの固定作業区分）
+- ✅ TimeRecord に Job リレーションシップとバックアップフィールドを追加
+- ✅ SwiftData スキーマに Job を追加
+
+**Repository層の実装**:
+- ✅ JobRepository と JobRepositoryProtocol の実装
+- ✅ MockJobRepository の実装（テスト・プレビュー用）
+- ✅ ProjectRepository に ID 一意性バリデーションを追加
+- ✅ TimeRecordRepository を Job 対応に更新
+
+**ViewModel層の実装**:
+- ✅ ProjectRowViewModel に Job 選択機能を追加
+- ✅ UserDefaults による Job 選択状態の永続化
+- ✅ EditHistoryViewModel に Job 編集機能を追加
+- ✅ AddProjectViewModel に案件ID バリデーションを追加
+- ✅ ViewModelFactory を JobRepository 対応に更新
+
+**View層の実装**:
+- ✅ ProjectRowView に作業区分プルダウンを追加
+- ✅ AddProjectSheetView に案件ID 入力フィールドを追加
+- ✅ EditHistorySheetView に作業区分選択を追加
+- ✅ UI テキストを「プロジェクト」→「案件」に統一
+- ✅ ContentView のプレビューコードを更新
+
+**テストの実装**:
+- ✅ EditHistoryViewModelTests に Job 関連テストを追加
+  - Job 選択変更テスト
+  - Job 未選択時の保存失敗テスト
+  - 定義済み Job 可用性テスト
+- ✅ EditHistoryViewModelSimpleTests を更新
+- ✅ 全 23 ユニットテストが合格
+
+#### テスト結果
+
+```
+✔ Test run with 23 tests passed after 0.115 seconds.
+** TEST SUCCEEDED **
+```
+
+**テスト内訳**:
+- EditHistoryViewModelTests: 18 テスト（3つ新規追加）
+- EditHistoryViewModelSimpleTests: 3 テスト
+- TimeRabbitTests: 1 テスト
+- その他: 1 テスト
+
+#### ビルド結果
+
+```
+** BUILD SUCCEEDED **
+```
+
+警告のみ（Swift 6 MainActor 関連、機能に影響なし）
+
+#### Git コミット履歴
+
+1. `852ceff` - Add project & job model redesign and update design doc naming
+2. `94d569c` - Implement Project & Job model redesign
+3. `04514a5` - Fix missing JobRepository parameters in test files and preview code
+4. `2887de1` - Add Job selection to history edit screen and update tests
+
+#### 実装された主要機能
+
+1. **案件管理**:
+   - ユーザー定義可能な案件ID（String型、3-20文字）
+   - 案件ID の一意性バリデーション
+   - 案件作成・編集・削除機能
+
+2. **作業区分管理**:
+   - 5つの固定作業区分（001: 開発、002: 保守、003: POサポート・コンサル、006: デザイン、999: その他）
+   - 案件ごとの作業区分選択
+   - UserDefaults による選択状態の永続化
+   - デフォルト選択（開発）の自動設定
+
+3. **時間記録**:
+   - 案件 + 作業区分の組み合わせでの記録開始
+   - 履歴編集画面での作業区分変更
+   - 削除された案件・作業区分のバックアップ表示
+
+4. **データ整合性**:
+   - 案件削除時の TimeRecord への影響なし（nullify）
+   - 作業区分削除時の TimeRecord への影響なし（nullify）
+   - バックアップフィールドによる削除後の表示対応
+
 ## まとめ
 
 この設計では以下の修正を反映しています：
@@ -341,4 +434,4 @@ class ContentViewModel: BaseViewModel {
 3. **データベースリセット**: 移行機能不要、完全刷新
 4. **UI設計**: 案件行での作業区分選択、選択状態の永続化
 
-この設計書に基づいて段階的な実装を進めることで、要件を満たした新機能を安全に追加できます。
+**実装結果**: 全フェーズ完了、23テスト合格、ビルド成功。要件を満たした新機能の実装が完了しました。

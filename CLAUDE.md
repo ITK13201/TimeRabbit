@@ -12,12 +12,17 @@ The app follows a **1:1 View-ViewModel MVVM pattern** with a repository layer fo
 
 ### Core Components
 
-- **Models** (`Models.swift`): SwiftData models for `Project` and `TimeRecord` with proper relationships
+- **Models** (`Models.swift`): SwiftData models for `Project`, `Job`, and `TimeRecord` with proper relationships
+  - `Project`: User-defined project with String ID (案件)
+  - `Job`: Fixed work categories (作業区分) with 5 predefined types
+  - `TimeRecord`: Time tracking records with Project + Job associations
 - **Repositories** (`repositories/`): Data persistence layer using SwiftData's ModelContext
-  - `ProjectRepository.swift`: Project-specific operations
-  - `TimeRecordRepository.swift`: Time tracking operations with update/delete capabilities
+  - `ProjectRepository.swift`: Project-specific operations with ID uniqueness validation
+  - `TimeRecordRepository.swift`: Time tracking operations with update/delete capabilities and Job support
+  - `JobRepository.swift`: Job management with predefined work categories initialization
   - `MockProjectRepository.swift`: Mock project operations for testing/previews
   - `MockTimeRecordRepository.swift`: Mock time tracking operations for testing/previews
+  - `MockJobRepository.swift`: Mock job operations for testing/previews
 - **Services** (`DateService.swift`): Shared date management service for statistics and history screen synchronization
 - **Utilities** (`Utils.swift`): Date/time formatting functions and color utilities
 - **Logging System** (`Logger.swift`): Professional OSLog-based categorized logging for app, repository, SwiftData, ViewModel, UI, and database operations
@@ -51,15 +56,16 @@ Each View has its dedicated ViewModel following single responsibility principle:
 ### Key Design Patterns
 
 - **1:1 View-ViewModel Mapping**: Each View has its dedicated ViewModel for clear responsibility separation
-- **Repository Pattern**: Separate repositories for projects and time records with protocol-based interfaces
+- **Repository Pattern**: Separate repositories for projects, jobs, and time records with protocol-based interfaces
 - **Dependency Injection**: ViewModelFactory manages ViewModel creation and repository injection
 - **Clean Architecture**: Clear separation between data layer (repositories) and presentation layer (ViewModels)
 - **Mock Strategy**: Mock repositories enable SwiftUI previews and facilitate testing
 - **Base ViewModel**: Common functionality like error handling, loading states through BaseViewModel
 - **Data Integrity**: SwiftData models with proper cascade/nullify relationships
-- **Defensive Design**: TimeRecords preserve project info even when projects are deleted
+- **Defensive Design**: TimeRecords preserve project and job info even when they are deleted
 - **Shared State Management**: DateService provides synchronized date selection between statistics and history screens
 - **Copy Functionality**: Statistics screen includes Markdown-formatted data export with visual feedback
+- **Job Selection Persistence**: UserDefaults stores job selection per project for consistent user experience
 
 ## Development Commands
 
@@ -110,27 +116,49 @@ xcodebuild test -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'p
 
 ## Key Features
 
-1. **Project Management**: Create, delete, and manage color-coded projects
-2. **Time Tracking**: Start/stop time recording with real-time duration updates
-3. **Statistics**: Daily project time breakdown with percentages and exportable Markdown format
-4. **History**: View past work sessions by date with detailed time logs and editing capabilities
-5. **Record Editing**: Edit completed time records (start/end time, project assignment)
-6. **Data Persistence**: SwiftData integration with proper model relationships
-7. **Date Synchronization**: Synchronized date selection between statistics and history screens
+1. **Project Management (案件管理)**:
+   - Create, delete, and manage color-coded projects with user-defined String IDs
+   - Project ID uniqueness validation (3-20 characters)
+   - UI terminology: "案件" (Project in code)
+
+2. **Job Management (作業区分管理)**:
+   - 5 fixed work categories (001: 開発, 002: 保守, 003: POサポート・コンサル, 006: デザイン, 999: その他)
+   - Job selection per project with UserDefaults persistence
+   - Default job selection (開発/Development)
+
+3. **Time Tracking**:
+   - Start/stop time recording with Project + Job combination
+   - Real-time duration updates
+   - Job selection dropdown on project rows
+
+4. **Statistics**: Daily project time breakdown with percentages and exportable Markdown format
+
+5. **History**: View past work sessions by date with detailed time logs and editing capabilities
+
+6. **Record Editing**:
+   - Edit completed time records (start/end time, project assignment, job assignment)
+   - Job selection in edit screen
+   - Backup fields preserve deleted project/job information
+
+7. **Data Persistence**: SwiftData integration with proper model relationships (Project, Job, TimeRecord)
+
+8. **Date Synchronization**: Synchronized date selection between statistics and history screens
 
 ## Working with the Code
 
 ### Development Guidelines
 
 - **Follow 1:1 View-ViewModel pattern**: Each new View should have its dedicated ViewModel
-- **Use ViewModelFactory**: Create ViewModels through the factory to ensure proper dependency injection
+- **Use ViewModelFactory**: Create ViewModels through the factory to ensure proper dependency injection (includes JobRepository)
 - **Extend BaseViewModel**: New ViewModels should inherit from BaseViewModel for common functionality
 - **Repository Protocol**: Use repository protocols for data operations to maintain testability
-- **Mock Usage**: Use mock repositories for SwiftUI previews and unit testing
+- **Mock Usage**: Use mock repositories for SwiftUI previews and unit testing (MockProjectRepository, MockTimeRecordRepository, MockJobRepository)
 - **Error Handling**: Handle errors through BaseViewModel's error handling mechanism
-- **Japanese Localization**: Follow the existing Japanese UI text pattern
+- **Japanese Localization**: Follow the existing Japanese UI text pattern ("案件" for projects, "作業区分" for jobs)
 - **Color System**: Maintain the color system using the `getProjectColor` utility function in Utils.swift
 - **Date Management**: Use DateService for shared date state between statistics and history screens
+- **Job Selection**: Always include both Project and Job when starting time records
+- **Job Persistence**: Use UserDefaults for persisting job selection per project (key: "selectedJob_{projectId}")
 - **Testing Policy**: Execute unit tests (TimeRabbitTests/) but exclude UITests (TimeRabbitUITests/) from automated execution
 - **Logging**: Use AppLogger for structured logging (AppLogger.app, AppLogger.repository, AppLogger.viewModel, etc.)
 
@@ -148,7 +176,7 @@ xcodebuild test -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'p
 ```
 TimeRabbit/
 ├── TimeRabbitApp.swift         # Main app entry point
-├── Models.swift                # SwiftData models (Project, TimeRecord)
+├── Models.swift                # SwiftData models (Project, Job, TimeRecord)
 ├── Logger.swift                # Professional OSLog-based logging system
 ├── DateService.swift           # Shared date management service
 ├── Utils.swift                 # Date/time formatting and color utilities
@@ -157,8 +185,10 @@ TimeRabbit/
 ├── repositories/              # Data layer
 │   ├── ProjectRepository.swift
 │   ├── TimeRecordRepository.swift
+│   ├── JobRepository.swift
 │   ├── MockProjectRepository.swift
-│   └── MockTimeRecordRepository.swift
+│   ├── MockTimeRecordRepository.swift
+│   └── MockJobRepository.swift
 ├── viewmodels/                # Presentation layer
 │   ├── base/
 │   │   ├── BaseViewModel.swift
@@ -205,10 +235,21 @@ struct YourView: View {
   var body: some View { ... }
 }
 
-// ViewModelFactory usage with DateService
+// ViewModelFactory usage with DateService and JobRepository
 let dateService = DateService()
-let factory = ViewModelFactory.create(with: (projectRepo, timeRecordRepo), dateService: dateService)
+let factory = ViewModelFactory.create(
+  with: (projectRepo, timeRecordRepo, jobRepo),
+  dateService: dateService
+)
 let viewModel = factory.createYourViewModel()
+
+// Job selection pattern in ViewModels
+let mockJobRepo = MockJobRepository()
+let jobs = try! mockJobRepo.fetchAllJobs()
+let defaultJob = jobs.first { $0.id == "001" } // 開発
+
+// Starting time record with Job
+try timeRecordRepository.startTimeRecord(for: project, job: selectedJob)
 
 // Logging usage
 AppLogger.app.info("Application started")
