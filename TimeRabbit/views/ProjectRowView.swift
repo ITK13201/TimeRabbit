@@ -37,14 +37,16 @@ struct ProjectRowView: View {
 
       // 作業区分選択プルダウン
       if !viewModel.isActive {
-        Picker("作業区分", selection: $viewModel.selectedJob) {
+        Picker(selection: $viewModel.selectedJob) {
           ForEach(viewModel.availableJobs, id: \.id) { job in
             Text(job.name)
               .tag(job as Job?)
           }
+        } label: {
+          EmptyView()
         }
         .pickerStyle(.menu)
-        .frame(width: 100)
+        .frame(width: 120)
         .onChange(of: viewModel.selectedJob) { _, newJob in
           if let newJob = newJob {
             viewModel.updateSelectedJob(newJob)
