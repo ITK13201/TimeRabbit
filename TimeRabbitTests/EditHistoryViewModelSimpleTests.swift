@@ -28,8 +28,10 @@ struct EditHistoryViewModelSimpleTests {
     // Basic state verification
     #expect(viewModel.editingRecord == nil)
     #expect(viewModel.selectedProject == nil)
+    #expect(viewModel.selectedJob == nil)
     #expect(viewModel.showingEditSheet == false)
     #expect(viewModel.showingDeleteAlert == false)
+    #expect(viewModel.availableJobs.count == 5)
   }
   
   @Test("Time range validation works")

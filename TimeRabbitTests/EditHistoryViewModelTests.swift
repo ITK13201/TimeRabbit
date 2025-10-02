@@ -42,15 +42,17 @@ struct EditHistoryViewModelTests {
   @Test("ViewModel should initialize correctly")
   func testInitialization() async {
     let (viewModel, _, _, projects, _) = createTestSetup()
-    
+
     // Wait a moment for async initialization
     try! await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-    
+
     #expect(viewModel.editingRecord == nil)
     #expect(viewModel.selectedProject == nil)
+    #expect(viewModel.selectedJob == nil)
     #expect(viewModel.showingEditSheet == false)
     #expect(viewModel.showingDeleteAlert == false)
     #expect(viewModel.availableProjects.count == projects.count)
+    #expect(viewModel.availableJobs.count == 5) // 5 predefined jobs
   }
   
   // MARK: - Start Editing Tests
@@ -58,16 +60,17 @@ struct EditHistoryViewModelTests {
   @Test("Should start editing completed record")
   func testStartEditingCompletedRecord() async {
     let (viewModel, _, _, _, timeRecords) = createTestSetup()
-    
+
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
       return
     }
-    
+
     viewModel.startEditing(recordToEdit)
-    
+
     #expect(viewModel.editingRecord?.id == recordToEdit.id)
     #expect(viewModel.selectedProject?.id == recordToEdit.project?.id)
+    #expect(viewModel.selectedJob?.id == recordToEdit.job?.id)
     #expect(viewModel.startTime == recordToEdit.startTime)
     #expect(viewModel.endTime == recordToEdit.endTime)
     #expect(viewModel.showingEditSheet == true)
@@ -237,25 +240,81 @@ struct EditHistoryViewModelTests {
   @Test("Should not save when missing required data")
   func testSaveWithMissingData() async {
     let (viewModel, _, _, _, timeRecords) = createTestSetup()
-    
+
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
       return
     }
-    
+
     viewModel.startEditing(recordToEdit)
-    
+
     // Remove required project
     viewModel.selectedProject = nil
-    
+
     viewModel.saveChanges()
-    
+
+    #expect(viewModel.errorMessage != nil)
+    #expect(viewModel.showingEditSheet == true)
+  }
+
+  @Test("Should not save when missing job")
+  func testSaveWithMissingJob() async {
+    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+
+    guard let recordToEdit = timeRecords.first else {
+      #expect(Bool(false), "No completed records found for testing")
+      return
+    }
+
+    viewModel.startEditing(recordToEdit)
+
+    // Remove required job
+    viewModel.selectedJob = nil
+
+    viewModel.saveChanges()
+
     #expect(viewModel.errorMessage != nil)
     #expect(viewModel.showingEditSheet == true)
   }
   
+  // MARK: - Job Selection Tests
+
+  @Test("Should change job selection")
+  func testChangeJobSelection() async {
+    let (viewModel, _, _, _, timeRecords) = createTestSetup()
+
+    guard let recordToEdit = timeRecords.first else {
+      #expect(Bool(false), "No completed records found for testing")
+      return
+    }
+
+    viewModel.startEditing(recordToEdit)
+
+    let originalJob = viewModel.selectedJob
+
+    // Change to a different job
+    if let newJob = viewModel.availableJobs.first(where: { $0.id != originalJob?.id }) {
+      viewModel.selectedJob = newJob
+
+      #expect(viewModel.selectedJob?.id == newJob.id)
+      #expect(viewModel.selectedJob?.id != originalJob?.id)
+    }
+  }
+
+  @Test("Should have all predefined jobs available")
+  func testPredefinedJobsAvailable() async {
+    let (viewModel, _, _, _, _) = createTestSetup()
+
+    #expect(viewModel.availableJobs.count == 5)
+
+    let expectedJobIds = ["001", "002", "003", "006", "999"]
+    for jobId in expectedJobIds {
+      #expect(viewModel.availableJobs.contains(where: { $0.id == jobId }))
+    }
+  }
+
   // MARK: - Delete Tests
-  
+
   @Test("Should delete record")
   func testDeleteRecord() async {
     let (viewModel, _, _, _, timeRecords) = createTestSetup()
@@ -289,20 +348,21 @@ struct EditHistoryViewModelTests {
   @Test("Should cancel editing")
   func testCancel() async {
     let (viewModel, _, _, _, timeRecords) = createTestSetup()
-    
+
     guard let recordToEdit = timeRecords.first else {
       #expect(Bool(false), "No completed records found for testing")
       return
     }
-    
+
     viewModel.startEditing(recordToEdit)
-    
+
     viewModel.cancel()
-    
+
     #expect(viewModel.showingEditSheet == false)
     #expect(viewModel.showingDeleteAlert == false)
     #expect(viewModel.editingRecord == nil)
     #expect(viewModel.selectedProject == nil)
+    #expect(viewModel.selectedJob == nil)
     #expect(viewModel.errorMessage == nil)
   }
   

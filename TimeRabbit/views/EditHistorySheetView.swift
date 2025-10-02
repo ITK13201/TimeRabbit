@@ -61,14 +61,14 @@ struct EditHistorySheetView: View {
         Section {
           // プロジェクト選択
           HStack {
-            Text("プロジェクト")
+            Text("案件")
               .frame(width: 80, alignment: .leading)
-            
+
             Picker("", selection: $viewModel.selectedProject) {
-              Text("プロジェクトを選択")
+              Text("案件を選択")
                 .foregroundColor(.secondary)
                 .tag(nil as Project?)
-              
+
               ForEach(viewModel.availableProjects, id: \.id) { project in
                 HStack {
                   Circle()
@@ -77,6 +77,24 @@ struct EditHistorySheetView: View {
                   Text(project.name)
                 }
                 .tag(project as Project?)
+              }
+            }
+            .pickerStyle(MenuPickerStyle())
+          }
+
+          // 作業区分選択
+          HStack {
+            Text("作業区分")
+              .frame(width: 80, alignment: .leading)
+
+            Picker("", selection: $viewModel.selectedJob) {
+              Text("作業区分を選択")
+                .foregroundColor(.secondary)
+                .tag(nil as Job?)
+
+              ForEach(viewModel.availableJobs, id: \.id) { job in
+                Text(job.name)
+                  .tag(job as Job?)
               }
             }
             .pickerStyle(MenuPickerStyle())
@@ -169,7 +187,8 @@ struct EditHistorySheetView: View {
         VStack(alignment: .leading, spacing: 4) {
           if let record = viewModel.editingRecord {
             Text("このレコードを削除しますか？")
-            Text("プロジェクト: \(record.displayProjectName)")
+            Text("案件: \(record.displayProjectName)")
+            Text("作業区分: \(record.displayJobName)")
             Text("時間: \(formatTimeOnly(record.startTime)) 〜 \(formatTimeOnly(record.endTime ?? Date()))")
           }
         }
