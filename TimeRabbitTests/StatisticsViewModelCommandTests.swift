@@ -18,14 +18,25 @@ struct StatisticsViewModelCommandTests {
     // Arrange
     let mockProjectRepo = MockProjectRepository(withSampleData: true)
     let projects = try mockProjectRepo.fetchProjects()
-    let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: true)
+    let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: false)
     let mockJobRepo = MockJobRepository()
+    let jobs = try mockJobRepo.fetchAllJobs()
     let dateService = DateService()
 
-    // 2025/10/03の日付を設定
+    // 過去の日付を設定（2025/09/15）
     let calendar = Calendar.current
-    let components = DateComponents(year: 2025, month: 10, day: 3)
-    dateService.selectedDate = calendar.date(from: components)!
+    let testDate = calendar.date(from: DateComponents(year: 2025, month: 9, day: 15))!
+    dateService.selectedDate = testDate
+
+    // 2025/09/15のテストデータを作成
+    let project = projects[0]
+    let job = jobs[0]
+    let startTime = calendar.date(from: DateComponents(year: 2025, month: 9, day: 15, hour: 9, minute: 0))!
+    let endTime = calendar.date(from: DateComponents(year: 2025, month: 9, day: 15, hour: 10, minute: 0))!
+
+    let record = try mockTimeRecordRepo.startTimeRecord(for: project, job: job)
+    try mockTimeRecordRepo.stopCurrentTimeRecord()
+    try mockTimeRecordRepo.updateTimeRecord(record, startTime: startTime, endTime: endTime, project: project, job: job)
 
     let factory = ViewModelFactory.create(
       with: (mockProjectRepo, mockTimeRecordRepo, mockJobRepo)
@@ -43,12 +54,12 @@ struct StatisticsViewModelCommandTests {
       let command = viewModel.generateCommand(for: firstDetail)
 
       // コマンドフォーマットの検証: "add yyyy/MM/dd [projectId] [jobId] [percentage]"
-      #expect(command.hasPrefix("add 2025/10/03"), "Command should start with 'add 2025/10/03'")
+      #expect(command.hasPrefix("add 2025/09/15"), "Command should start with 'add 2025/09/15'")
 
       let components = command.split(separator: " ")
       #expect(components.count == 5, "Command should have 5 components")
       #expect(components[0] == "add", "First component should be 'add'")
-      #expect(components[1] == "2025/10/03", "Second component should be date")
+      #expect(components[1] == "2025/09/15", "Second component should be date")
       #expect(components[2] == firstDetail.projectId, "Third component should be projectId")
       #expect(components[3] == firstDetail.jobId, "Fourth component should be jobId")
 
@@ -67,13 +78,34 @@ struct StatisticsViewModelCommandTests {
     // Arrange
     let mockProjectRepo = MockProjectRepository(withSampleData: true)
     let projects = try mockProjectRepo.fetchProjects()
-    let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: true)
+    let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: false)
     let mockJobRepo = MockJobRepository()
+    let jobs = try mockJobRepo.fetchAllJobs()
     let dateService = DateService()
 
     let calendar = Calendar.current
-    let components = DateComponents(year: 2025, month: 10, day: 3)
-    dateService.selectedDate = calendar.date(from: components)!
+    let testDate = calendar.date(from: DateComponents(year: 2025, month: 9, day: 15))!
+    dateService.selectedDate = testDate
+
+    // 2025/09/15のテストデータを複数作成
+    let project1 = projects[0]
+    let project2 = projects[1]
+    let job1 = jobs[0]
+    let job2 = jobs[1]
+
+    // Record 1: Project 1, Job 1, 9:00-10:00
+    let record1 = try mockTimeRecordRepo.startTimeRecord(for: project1, job: job1)
+    try mockTimeRecordRepo.stopCurrentTimeRecord()
+    let start1 = calendar.date(from: DateComponents(year: 2025, month: 9, day: 15, hour: 9, minute: 0))!
+    let end1 = calendar.date(from: DateComponents(year: 2025, month: 9, day: 15, hour: 10, minute: 0))!
+    try mockTimeRecordRepo.updateTimeRecord(record1, startTime: start1, endTime: end1, project: project1, job: job1)
+
+    // Record 2: Project 2, Job 2, 10:00-11:00
+    let record2 = try mockTimeRecordRepo.startTimeRecord(for: project2, job: job2)
+    try mockTimeRecordRepo.stopCurrentTimeRecord()
+    let start2 = calendar.date(from: DateComponents(year: 2025, month: 9, day: 15, hour: 10, minute: 0))!
+    let end2 = calendar.date(from: DateComponents(year: 2025, month: 9, day: 15, hour: 11, minute: 0))!
+    try mockTimeRecordRepo.updateTimeRecord(record2, startTime: start2, endTime: end2, project: project2, job: job2)
 
     let factory = ViewModelFactory.create(
       with: (mockProjectRepo, mockTimeRecordRepo, mockJobRepo)
@@ -97,7 +129,7 @@ struct StatisticsViewModelCommandTests {
       let lineComponents = line.split(separator: " ")
       #expect(lineComponents.count == 5, "Each command line should have 5 components")
       #expect(lineComponents[0] == "add", "Each line should start with 'add'")
-      #expect(lineComponents[1] == "2025/10/03", "Each line should have the date")
+      #expect(lineComponents[1] == "2025/09/15", "Each line should have the date")
     }
   }
 
@@ -117,7 +149,7 @@ struct StatisticsViewModelCommandTests {
 
     let dateService = DateService()
     let calendar = Calendar.current
-    let components = DateComponents(year: 2025, month: 10, day: 3, hour: 9, minute: 0)
+    let components = DateComponents(year: 2025, month: 9, day: 15, hour: 9, minute: 0)
     let startDate = calendar.date(from: components)!
     dateService.selectedDate = startDate
 
@@ -201,10 +233,10 @@ struct StatisticsViewModelCommandTests {
     let mockJobRepo = MockJobRepository()
     let dateService = DateService()
 
-    // 異なる日付でテスト
+    // 異なる日付でテスト（過去の日付を使用）
     let testDates: [(year: Int, month: Int, day: Int, expected: String)] = [
       (2025, 1, 1, "2025/01/01"),
-      (2025, 10, 3, "2025/10/03"),
+      (2025, 9, 15, "2025/09/15"),
       (2024, 12, 31, "2024/12/31")
     ]
 
@@ -247,7 +279,7 @@ struct StatisticsViewModelCommandTests {
 
     let dateService = DateService()
     let calendar = Calendar.current
-    let components = DateComponents(year: 2025, month: 10, day: 3, hour: 9, minute: 0)
+    let components = DateComponents(year: 2025, month: 9, day: 15, hour: 9, minute: 0)
     let startDate = calendar.date(from: components)!
     dateService.selectedDate = startDate
 
