@@ -107,14 +107,30 @@ xcodebuild test -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'p
 - Execution time: ~0.1 seconds vs several minutes with UITests included
 - Avoid running UITests (TimeRabbitUITests/) - focus on TimeRabbitTests/ only
 
+**Important Test Considerations:**
+- Test data must use **past dates** to avoid `futureTime` validation errors in `TimeRecordRepository.validateTimeRange()`
+- Mock repositories with `withSampleData: false` allow explicit test data creation for specific dates
+- Time validation allows 60-second proximity between records (not strict overlap prevention)
+
 ### Project Configuration
-- macOS deployment target: 14.0  
+- macOS deployment target: 14.0
 - Swift version: 5.0
+- Xcode project format: objectVersion 77 (requires Xcode 16.1+)
 - Uses SwiftUI with SwiftData for persistence
 - Dev build creates "TimeRabbit.dev.app"
-- Release build creates "TimeRabbit.app"  
+- Release build creates "TimeRabbit.app"
 - Bundle identifier: dev.i-tk.TimeRabbit(.dev)
 - Professional logging system using OSLog with categorized loggers (AppLogger)
+
+### CI/CD
+- **GitHub Actions** workflows in `.github/workflows/`
+- **CI** (`ci.yml`): Runs tests on PR and main branch pushes
+- **Release** (`release.yml`): Two-stage workflow (test → build-and-release) triggered by version tags (`v*.*.*`)
+  - Uses macOS 15 runners with Xcode 16.4
+  - Creates unsigned builds (no Apple Developer Program required)
+  - Generates ZIP, DMG, and SHA256 checksums
+  - Auto-publishes to GitHub Releases with generated release notes
+- Test failures block releases (tests must pass before deployment)
 
 ## Key Features
 
@@ -133,7 +149,12 @@ xcodebuild test -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'p
    - Real-time duration updates
    - Job selection dropdown on project rows
 
-4. **Statistics**: Daily project time breakdown with percentages and exportable Markdown format
+4. **Statistics**:
+   - Daily project time breakdown with percentages
+   - Grouped by Project + Job combinations (not just project names)
+   - Exportable command format: `add yyyy/MM/dd [project ID] [job ID] [percentage]`
+   - Individual copy buttons per project-job row for external software integration
+   - Percentage calculation uses `Int(round())` for consistency between display and export
 
 5. **History**: View past work sessions by date with detailed time logs and editing capabilities
 
@@ -266,3 +287,25 @@ AppLogger.app.info("Application started")
 AppLogger.repository.debug("Saving project")
 AppLogger.viewModel.error("Failed to load data: \(error)")
 ```
+
+### Critical Implementation Details
+
+#### Time Validation Logic
+`TimeRecordRepository.validateTimeRange()` enforces:
+- Start time must be before end time
+- End time cannot be in the future (`endTime <= Date()`)
+- Minimum duration: 60 seconds
+- Maximum duration: 24 hours (86400 seconds)
+- Overlap tolerance: Records within 60 seconds proximity are allowed (flexible validation)
+
+#### Statistics Command Export
+- Command format: `add yyyy/MM/dd [projectId] [jobId] [percentage]`
+- Date format: `yyyy/MM/dd` (e.g., "2025/09/15")
+- Percentage: Rounded integer using `Int(round(percentage))`
+- Grouping: By `(projectId, jobId)` tuple, not by display names
+- Generated via `StatisticsViewModel.generateCommand(for:)` method
+
+#### SwiftData Model Relationships
+- `Project` → `TimeRecord`: `.nullify` (TimeRecords preserve deleted project info in backup fields)
+- `Job` → `TimeRecord`: `.nullify` (TimeRecords preserve deleted job info in backup fields)
+- Backup fields (`projectIdBackup`, `projectNameBackup`, `jobIdBackup`, `jobNameBackup`) ensure data integrity even after parent deletion
