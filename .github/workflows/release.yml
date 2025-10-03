@@ -1,0 +1,173 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Cache derived data
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-derived-data-${{ hashFiles('**/*.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-derived-data-
+
+      - name: Run unit tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project TimeRabbit.xcodeproj \
+            -scheme TimeRabbit \
+            -destination 'platform=macOS' \
+            -testPlan TimeRabbitTests \
+            -enableCodeCoverage YES \
+            | tee test-output.log
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-output.log
+          retention-days: 30
+
+  build-and-release:
+    name: Build and Release
+    runs-on: macos-14
+    needs: test
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Cache derived data
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-derived-data-release-${{ hashFiles('**/*.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-derived-data-release-
+
+      - name: Build Release
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project TimeRabbit.xcodeproj \
+            -scheme TimeRabbit \
+            -configuration Release \
+            -archivePath ${{ runner.temp }}/TimeRabbit.xcarchive \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Export app
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath ${{ runner.temp }}/TimeRabbit.xcarchive \
+            -exportPath ${{ runner.temp }}/export \
+            -exportOptionsPlist exportOptions.plist
+
+      - name: Create ZIP archive
+        run: |
+          cd ${{ runner.temp }}/export
+          ditto -c -k --sequesterRsrc --keepParent TimeRabbit.app TimeRabbit-${{ steps.version.outputs.version }}.zip
+          shasum -a 256 TimeRabbit-${{ steps.version.outputs.version }}.zip > TimeRabbit-${{ steps.version.outputs.version }}.zip.sha256
+
+      - name: Create DMG
+        run: |
+          chmod +x ./scripts/create-dmg.sh
+          ./scripts/create-dmg.sh \
+            ${{ runner.temp }}/export/TimeRabbit.app \
+            ${{ runner.temp }}/export/TimeRabbit-${{ steps.version.outputs.version }}.dmg
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # 前回のタグからの変更を取得
+          PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1) 2>/dev/null || echo "")
+
+          if [ -z "$PREVIOUS_TAG" ]; then
+            CHANGES=$(git log --pretty=format:"- %s" --no-merges)
+          else
+            CHANGES=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s" --no-merges)
+          fi
+
+          cat << EOF > release_notes.md
+          ## Changes
+
+          $CHANGES
+
+          ## Installation
+
+          ### Option 1: Using ZIP file (Recommended)
+          1. Download \`TimeRabbit-${{ steps.version.outputs.version }}.zip\`
+          2. Extract the zip file
+          3. Move \`TimeRabbit.app\` to your Applications folder
+          4. Right-click on \`TimeRabbit.app\` and select "Open" (first time only)
+          5. Click "Open" in the dialog that appears
+
+          ### Option 2: Using DMG file
+          1. Download \`TimeRabbit-${{ steps.version.outputs.version }}.dmg\`
+          2. Open the DMG file
+          3. Drag \`TimeRabbit.app\` to the Applications folder
+          4. Right-click on \`TimeRabbit.app\` and select "Open" (first time only)
+          5. Click "Open" in the dialog that appears
+
+          ## Notes
+
+          This build is not signed with an Apple Developer certificate. macOS Gatekeeper will show a warning on first launch.
+          To bypass this warning, right-click on the app and select "Open" instead of double-clicking.
+
+          ## Checksums
+
+          \`\`\`
+          $(cat ${{ runner.temp }}/export/TimeRabbit-${{ steps.version.outputs.version }}.zip.sha256)
+          \`\`\`
+          EOF
+
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: TimeRabbit v${{ steps.version.outputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            ${{ runner.temp }}/export/TimeRabbit-${{ steps.version.outputs.version }}.zip
+            ${{ runner.temp }}/export/TimeRabbit-${{ steps.version.outputs.version }}.zip.sha256
+            ${{ runner.temp }}/export/TimeRabbit-${{ steps.version.outputs.version }}.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
