@@ -125,6 +125,7 @@ struct ContentView: View {
   let mockJobRepo = MockJobRepository()
   let factory = ViewModelFactory.create(with: (mockProjectRepo, mockTimeRecordRepo, mockJobRepo))
   ContentView(viewModelFactory: factory)
+    .frame(width: 1000, height: 700)
 }
 
 #Preview("with sample data") {
@@ -134,4 +135,5 @@ struct ContentView: View {
   let mockJobRepo = MockJobRepository()
   let factory = ViewModelFactory.create(with: (mockProjectRepo, mockTimeRecordRepo, mockJobRepo))
   ContentView(viewModelFactory: factory)
+    .frame(width: 1000, height: 700)
 }

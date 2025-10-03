@@ -77,5 +77,6 @@ struct TimeRabbitApp: App {
       ContentView(viewModelFactory: viewModelFactory)
     }
     .modelContainer(modelContainer)
+    .defaultSize(width: 1000, height: 700)
   }
 }
