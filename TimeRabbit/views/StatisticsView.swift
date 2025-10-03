@@ -69,20 +69,20 @@ struct StatisticsView: View {
 
           ScrollView {
             LazyVStack(spacing: 8) {
-              ForEach(Array(viewModel.projectJobTimes.enumerated()), id: \.offset) { index, item in
-                let (projectName, jobName, projectColor, duration) = item
-                let percentage = viewModel.getPercentage(for: duration)
+              ForEach(Array(viewModel.projectJobDetails.enumerated()), id: \.offset) { index, detail in
+                let percentage = viewModel.getPercentage(for: detail.duration)
+                let command = viewModel.generateCommand(for: detail)
 
                 ProjectStatRowUpdated(
-                  projectName: projectName,
-                  jobName: jobName,
-                  projectColor: projectColor,
-                  duration: duration,
-                  percentage: percentage
+                  projectName: detail.projectName,
+                  jobName: detail.jobName,
+                  projectColor: detail.projectColor,
+                  duration: detail.duration,
+                  percentage: percentage,
+                  command: command
                 )
               }
-              
-              // コピー可能な統計データ表示
+
               VStack(alignment: .leading, spacing: 8) {
                 HStack {
                   Text("統計データ")
@@ -95,15 +95,15 @@ struct StatisticsView: View {
                       let pasteboard = NSPasteboard.general
                       pasteboard.clearContents()
                       pasteboard.setString(text, forType: .string)
-                      
+
                       // フィードバック表示をメインスレッドで実行
                       await MainActor.run {
                         showCopiedFeedback = true
                       }
-                      
+
                       // 2秒後にリセット
                       try? await Task.sleep(nanoseconds: 2_000_000_000)
-                      
+
                       await MainActor.run {
                         showCopiedFeedback = false
                       }
@@ -123,7 +123,7 @@ struct StatisticsView: View {
                   .help(showCopiedFeedback ? "コピーしました" : "統計データをクリップボードにコピー")
                   .animation(.easeInOut(duration: 0.3), value: showCopiedFeedback)
                 }
-                
+
                 ScrollView {
                   VStack(alignment: .leading) {
                     Text(viewModel.generateStatisticsText())

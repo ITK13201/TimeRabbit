@@ -12,8 +12,9 @@ import Combine
 @MainActor
 class StatisticsViewModel: BaseViewModel {
   // MARK: - Published Properties
-  
+
   @Published var projectJobTimes: [(String, String, String, TimeInterval)] = [] // (projectName, jobName, projectColor, duration)
+  @Published var projectJobDetails: [(projectId: String, projectName: String, projectColor: String, jobId: String, jobName: String, duration: TimeInterval)] = []
   @Published var totalTime: TimeInterval = 0
   
   // MARK: - Dependencies
@@ -62,20 +63,27 @@ class StatisticsViewModel: BaseViewModel {
       // 完了した記録のみを対象にする
       let completedRecords = records.filter { $0.endTime != nil }
 
-      // プロジェクト名 + 作業区分でグループ化
+      // プロジェクトID + ジョブIDでグループ化
       let groupedRecords = Dictionary(grouping: completedRecords) { record in
-        "\(record.displayProjectName)_\(record.displayJobName)_\(record.displayProjectColor)"
+        "\(record.displayProjectId)_\(record.displayJobId)"
       }
 
       // 統計データを計算
-      projectJobTimes = groupedRecords.map { (key, records) in
+      projectJobDetails = groupedRecords.map { (key, records) in
         let firstRecord = records.first!
+        let projectId = firstRecord.displayProjectId
         let projectName = firstRecord.displayProjectName
-        let jobName = firstRecord.displayJobName
         let projectColor = firstRecord.displayProjectColor
+        let jobId = firstRecord.displayJobId
+        let jobName = firstRecord.displayJobName
         let totalTime = records.reduce(0) { $0 + $1.duration }
-        return (projectName, jobName, projectColor, totalTime)
-      }.sorted { $0.3 > $1.3 } // 時間順でソート
+        return (projectId, projectName, projectColor, jobId, jobName, totalTime)
+      }.sorted { $0.duration > $1.duration } // 時間順でソート
+
+      // 後方互換性のため、既存のprojectJobTimesも更新
+      projectJobTimes = projectJobDetails.map { detail in
+        (detail.projectName, detail.jobName, detail.projectColor, detail.duration)
+      }
 
       // 総作業時間を計算
       totalTime = completedRecords.reduce(0) { $0 + $1.duration }
@@ -153,5 +161,27 @@ class StatisticsViewModel: BaseViewModel {
     }
 
     return result
+  }
+
+  func generateCommandText() -> String {
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "yyyy/MM/dd"
+    let dateText = dateFormatter.string(from: dateService.selectedDate)
+
+    var result = ""
+    for detail in projectJobDetails {
+      let percentage = Int(round(getPercentage(for: detail.duration)))
+      result += "add \(dateText) \(detail.projectId) \(detail.jobId) \(percentage)\n"
+    }
+
+    return result.trimmingCharacters(in: .newlines)
+  }
+
+  func generateCommand(for detail: (projectId: String, projectName: String, projectColor: String, jobId: String, jobName: String, duration: TimeInterval)) -> String {
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "yyyy/MM/dd"
+    let dateText = dateFormatter.string(from: dateService.selectedDate)
+    let percentage = Int(round(getPercentage(for: detail.duration)))
+    return "add \(dateText) \(detail.projectId) \(detail.jobId) \(percentage)"
   }
 }
