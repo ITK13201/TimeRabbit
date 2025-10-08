@@ -11,7 +11,8 @@
 4. [バージョニング規約](#バージョニング規約)
 5. [デプロイ手順（詳細）](#デプロイ手順詳細)
 6. [ロールバック手順](#ロールバック手順)
-7. [チェックリスト](#チェックリスト)
+7. [Issue管理](#issue管理)
+8. [チェックリスト](#チェックリスト)
 
 ---
 
@@ -57,15 +58,17 @@ feature/*, bugfix/*, hotfix/* (作業ブランチ)
 ```
 1. feature/bugfixブランチで開発
    ↓
-2. developへPR作成・マージ
+2. developへPR作成・レビュー・マージ
    ↓
 3. developで十分にテスト
    ↓
-4. developからmainへPR作成・マージ
+4. developからmainへPR作成・レビュー・マージ
    ↓
 5. mainでバージョンタグ作成
    ↓
 6. GitHub Actionsが自動ビルド・リリース
+   ↓
+7. 関連Issueをクローズ
 ```
 
 ### 緊急リリース（hotfix）
@@ -75,13 +78,15 @@ feature/*, bugfix/*, hotfix/* (作業ブランチ)
    ↓
 2. 修正実施
    ↓
-3. mainへPR作成・マージ
+3. mainへPR作成・レビュー・マージ
    ↓
 4. mainでバージョンタグ作成（パッチバージョンup）
    ↓
 5. GitHub Actionsが自動ビルド・リリース
    ↓
 6. mainの変更をdevelopへマージ（同期）
+   ↓
+7. 関連Issueをクローズ
 ```
 
 ---
@@ -123,7 +128,7 @@ feature/*, bugfix/*, hotfix/* (作業ブランチ)
 - [x] CLAUDE.mdが最新状態
 - [x] コミットメッセージがconventionに準拠
 
-### Step 1: developからmainへのマージ
+### Step 1: developブランチの準備
 
 ```bash
 # 1. developブランチを最新化
@@ -136,19 +141,59 @@ xcodebuild test \
   -scheme TimeRabbit \
   -destination 'platform=macOS' \
   -testPlan TimeRabbitTests
-
-# 3. mainブランチへ切り替え
-git checkout main
-git pull origin main
-
-# 4. developをmainにマージ
-git merge develop --no-ff
-
-# 5. mainにpush
-git push origin main
 ```
 
-### Step 2: バージョンタグの作成
+### Step 2: developからmainへのPull Request作成
+
+```bash
+# 1. developブランチをリモートにpush（最新の状態を確認）
+git push origin develop
+
+# 2. GitHubでPRを作成
+gh pr create \
+  --base main \
+  --head develop \
+  --title "Release v0.1.0" \
+  --body "$(cat <<'EOF'
+## Release Summary
+
+リリース予定バージョン: v0.1.0
+
+## Changes
+
+- #2 feature: Unify identifier naming with UUID-based id for all models
+- docs: Reorganize documentation structure
+
+## Checklist
+
+- [x] すべてのテストが成功
+- [x] CLAUDE.mdが最新
+- [x] ドキュメントが更新されている
+- [x] 関連Issueが対応済み
+
+## Related Issues
+
+Closes #2
+
+EOF
+)"
+
+# 3. PRのURLを確認
+# 出力されたURLでPRの内容を確認・レビュー
+```
+
+### Step 3: PRのマージとmainブランチの更新
+
+```bash
+# 1. PR承認後、マージ（GitHubのUIまたはCLIで）
+gh pr merge --merge --delete-branch=false
+
+# 2. ローカルのmainブランチを更新
+git checkout main
+git pull origin main
+```
+
+### Step 4: バージョンタグの作成
 
 ```bash
 # 1. 次のバージョン番号を決定（例: v0.1.0）
@@ -167,7 +212,7 @@ See release notes for full details."
 git push origin $VERSION
 ```
 
-### Step 3: GitHub Actionsの監視
+### Step 5: GitHub Actionsの監視
 
 ```bash
 # GitHubのActionsタブで進行状況を確認
@@ -183,7 +228,7 @@ git push origin $VERSION
    - GitHub Releaseの作成
    - アーティファクトのアップロード
 
-### Step 4: リリースの確認
+### Step 6: リリースの確認
 
 ```bash
 # GitHub Releasesページで確認
@@ -196,7 +241,36 @@ git push origin $VERSION
 # ✅ ZIP・DMG・SHA256ファイルがアップロードされている
 ```
 
-### Step 5: developブランチへの同期
+### Step 7: 関連Issueのクローズ
+
+リリースが完了したら、関連するIssueをクローズします。
+
+**方法1: PRで自動クローズ（推奨）**
+
+PR作成時に `Closes #XX` をPR本文に含めることで、PRマージ時に自動的にIssueがクローズされます。
+
+```bash
+# Step 2で作成したPRに既に含まれている
+## Related Issues
+
+Closes #2
+```
+
+**方法2: 手動でクローズ**
+
+```bash
+# GitHub CLIでクローズ
+gh issue close 2 --comment "Released in v0.1.0"
+
+# または、GitHubのUIでIssueをクローズ
+```
+
+**Issueクローズ時の注意事項**:
+- リリースバージョン番号をコメントに記載
+- 複数Issueが関連する場合は、すべてクローズ
+- リリースノートのリンクを追加すると良い
+
+### Step 8: developブランチへの同期
 
 ```bash
 # mainの変更をdevelopに反映
@@ -250,32 +324,100 @@ git push origin :refs/tags/v0.1.0
 
 ---
 
+## Issue管理
+
+### Issue作成ガイドライン
+
+開発作業を開始する前に、GitHub Issueを作成することを推奨します。
+
+**Issueテンプレート例**:
+
+```markdown
+## 概要
+[機能の概要や問題の説明]
+
+## 目的
+[この変更を行う理由]
+
+## 実装内容
+- [ ] タスク1
+- [ ] タスク2
+- [ ] タスク3
+
+## 関連ドキュメント
+- 設計書: docs/development/...
+```
+
+### Issueとブランチの命名規則
+
+| Issue種別 | ブランチ名 | 例 |
+|----------|-----------|---|
+| 新機能 | `feature/#XX-description` | `feature/#5-add-export-feature` |
+| バグ修正 | `bugfix/#XX-description` | `bugfix/#10-fix-crash-on-startup` |
+| 緊急修正 | `hotfix/#XX-description` | `hotfix/#15-fix-data-loss` |
+
+### PRとIssueの紐付け
+
+PRには必ず関連Issueを記載します。
+
+**PR本文に記載**:
+```markdown
+## Related Issues
+
+Closes #5
+Fixes #10
+Relates to #3
+```
+
+**キーワード**:
+- `Closes #XX`: PRマージ時にIssueを自動クローズ
+- `Fixes #XX`: 同上（バグ修正の場合）
+- `Relates to #XX`: 参照のみ（クローズしない）
+
+### リリース時のIssue処理
+
+1. **developへのマージ時**: Issueはまだオープンのまま
+2. **mainへのPR作成時**: PR本文に `Closes #XX` を記載
+3. **mainへのマージ時**: Issueが自動的にクローズ
+4. **リリース完了後**: クローズされたIssueにリリースバージョンをコメント
+
+```bash
+# リリース完了後に実行
+gh issue comment 2 --body "Released in [v0.1.0](https://github.com/[username]/TimeRabbit/releases/tag/v0.1.0)"
+```
+
+---
+
 ## チェックリスト
 
 ### リリース前チェックリスト
 
-- [ ] すべての関連Issueがクローズされている
+- [ ] すべての関連Issueが対応済み（developにマージ済み）
 - [ ] developブランチですべてのテストが成功
 - [ ] CLAUDE.mdが最新の変更を反映している
 - [ ] コミットメッセージが規約に準拠している
 - [ ] バージョン番号が適切に決定されている
-- [ ] リリースノートのドラフトを準備している
+- [ ] リリースPRの本文に `Closes #XX` が含まれている
 
 ### リリース手順チェックリスト
 
-- [ ] developをmainにマージ
+- [ ] developからmainへPRを作成
+- [ ] PRのレビュー・承認
+- [ ] PRをマージ（Issueが自動クローズされる）
 - [ ] mainでテストが成功することを確認
 - [ ] バージョンタグを作成・push
 - [ ] GitHub Actionsのワークフローが成功
 - [ ] GitHub Releaseが正しく作成されている
 - [ ] ZIP・DMG・SHA256が正しくアップロードされている
 - [ ] mainの変更をdevelopに同期
+- [ ] クローズされたIssueにリリースバージョンをコメント
 
 ### リリース後チェックリスト
 
 - [ ] リリースノートが正確である
 - [ ] アプリが正常に起動する（ローカルでZIP/DMGをダウンロードしてテスト）
 - [ ] 主要機能が動作する
+- [ ] 関連Issueがすべてクローズされている
 - [ ] 問題が発生した場合のロールバック手順を確認
 
 ---
@@ -302,9 +444,11 @@ TimeRabbitは現在、Apple Developer Programに登録していないため、**
 | ZIP/DMG生成 | ✅ 自動 |
 | リリースノート生成 | ✅ 自動 |
 | GitHub Release作成 | ✅ 自動 |
+| Issueクローズ（PRマージ時） | ✅ 自動 |
 | バージョン決定 | ❌ 手動 |
 | タグ作成 | ❌ 手動 |
-| ブランチマージ | ❌ 手動 |
+| PR作成・マージ | ❌ 手動 |
+| Issueへのコメント | ❌ 手動 |
 
 ---
 
