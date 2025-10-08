@@ -19,23 +19,23 @@ class MockJobRepository: JobRepositoryProtocol, ObservableObject {
   }
   
   func fetchAllJobs() throws -> [Job] {
-    return jobs.sorted { $0.id < $1.id }
+    return jobs.sorted { $0.jobId < $1.jobId }
   }
-  
+
   func initializePredefinedJobs() throws {
     // 既存のJobをチェック
-    let existingJobIds = Set(jobs.map { $0.id })
-    
+    let existingJobIds = Set(jobs.map { $0.jobId })
+
     // 不足している固定Jobを作成
-    for (id, name) in Job.predefinedJobs {
-      if !existingJobIds.contains(id) {
-        let job = Job(id: id, name: name)
+    for (jobId, name) in Job.predefinedJobs {
+      if !existingJobIds.contains(jobId) {
+        let job = Job(jobId: jobId, name: name)
         jobs.append(job)
       }
     }
   }
-  
-  func getJobById(_ id: String) throws -> Job? {
-    return jobs.first { $0.id == id }
+
+  func getJobById(_ jobId: String) throws -> Job? {
+    return jobs.first { $0.jobId == jobId }
   }
 }

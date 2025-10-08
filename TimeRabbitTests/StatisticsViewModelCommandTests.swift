@@ -138,8 +138,8 @@ struct StatisticsViewModelCommandTests {
   func testPercentageRounding() async throws {
     // Arrange
     let mockProjectRepo = MockProjectRepository(withSampleData: false)
-    let project1 = try mockProjectRepo.createProject(id: "PRJ001", name: "Project 1", color: "blue")
-    let project2 = try mockProjectRepo.createProject(id: "PRJ002", name: "Project 2", color: "red")
+    let project1 = try mockProjectRepo.createProject(projectId: "PRJ001", name: "Project 1", color: "blue")
+    let project2 = try mockProjectRepo.createProject(projectId: "PRJ002", name: "Project 2", color: "red")
 
     let projects = try mockProjectRepo.fetchProjects()
     let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: false)
@@ -268,14 +268,14 @@ struct StatisticsViewModelCommandTests {
   func testGroupingByProjectAndJob() async throws {
     // Arrange
     let mockProjectRepo = MockProjectRepository(withSampleData: false)
-    let project = try mockProjectRepo.createProject(id: "PRJ001", name: "Project 1", color: "blue")
+    let project = try mockProjectRepo.createProject(projectId: "PRJ001", name: "Project 1", color: "blue")
 
     let projects = try mockProjectRepo.fetchProjects()
     let mockTimeRecordRepo = MockTimeRecordRepository(projects: projects, withSampleData: false)
     let mockJobRepo = MockJobRepository()
     let jobs = try mockJobRepo.fetchAllJobs()
-    let job1 = jobs.first { $0.id == "001" }! // 開発
-    let job2 = jobs.first { $0.id == "002" }! // 保守
+    let job1 = jobs.first { $0.jobId == "001" }! // 開発
+    let job2 = jobs.first { $0.jobId == "002" }! // 保守
 
     let dateService = DateService()
     let calendar = Calendar.current

@@ -13,7 +13,7 @@ import SwiftData
 protocol JobRepositoryProtocol {
   func fetchAllJobs() throws -> [Job]
   func initializePredefinedJobs() throws
-  func getJobById(_ id: String) throws -> Job?
+  func getJobById(_ jobId: String) throws -> Job?
 }
 
 // MARK: - Job Repository Implementation
@@ -27,8 +27,8 @@ class JobRepository: JobRepositoryProtocol, ObservableObject {
   
   func fetchAllJobs() throws -> [Job] {
     AppLogger.repository.debug("Fetching all jobs")
-    let descriptor = FetchDescriptor<Job>(sortBy: [SortDescriptor(\.id)])
-    
+    let descriptor = FetchDescriptor<Job>(sortBy: [SortDescriptor(\.jobId)])
+
     do {
       let jobs = try modelContext.fetch(descriptor)
       AppLogger.repository.debug("Successfully fetched \(jobs.count) jobs")
@@ -38,23 +38,23 @@ class JobRepository: JobRepositoryProtocol, ObservableObject {
       throw error
     }
   }
-  
+
   func initializePredefinedJobs() throws {
     AppLogger.repository.debug("Initializing predefined jobs")
-    
+
     // 既存のJobをチェック
     let existingJobs = try fetchAllJobs()
-    let existingJobIds = Set(existingJobs.map { $0.id })
-    
+    let existingJobIds = Set(existingJobs.map { $0.jobId })
+
     // 不足している固定Jobを作成
-    for (id, name) in Job.predefinedJobs {
-      if !existingJobIds.contains(id) {
-        let job = Job(id: id, name: name)
+    for (jobId, name) in Job.predefinedJobs {
+      if !existingJobIds.contains(jobId) {
+        let job = Job(jobId: jobId, name: name)
         modelContext.insert(job)
-        AppLogger.repository.debug("Created predefined job: \(id) - \(name)")
+        AppLogger.repository.debug("Created predefined job: \(jobId) - \(name)")
       }
     }
-    
+
     do {
       try modelContext.save()
       AppLogger.repository.info("Successfully initialized predefined jobs")
@@ -63,15 +63,15 @@ class JobRepository: JobRepositoryProtocol, ObservableObject {
       throw error
     }
   }
-  
-  func getJobById(_ id: String) throws -> Job? {
-    AppLogger.repository.debug("Fetching job by ID: \(id)")
+
+  func getJobById(_ jobId: String) throws -> Job? {
+    AppLogger.repository.debug("Fetching job by ID: \(jobId)")
     let descriptor = FetchDescriptor<Job>(
       predicate: #Predicate<Job> { job in
-        job.id == id
+        job.jobId == jobId
       }
     )
-    
+
     do {
       let jobs = try modelContext.fetch(descriptor)
       let job = jobs.first

@@ -71,11 +71,11 @@ class AddProjectViewModel: BaseViewModel {
     }
     
     if let newProject = withLoadingSync({
-      try projectRepository.createProject(id: trimmedId, name: trimmedName, color: selectedColor)
+      try projectRepository.createProject(projectId: trimmedId, name: trimmedName, color: selectedColor)
     }) {
       // フォームをリセット
       resetForm()
-      
+
       // コールバックを呼び出し
       onProjectCreated?(newProject)
     }

@@ -12,7 +12,8 @@ import SwiftUI
 
 @Model
 final class Project {
-  var id: String           // ユーザー編集可能な案件ID
+  var id: UUID             // システム内部管理用の一意識別子
+  var projectId: String    // ユーザー編集可能な案件ID
   var name: String         // 案件名
   var color: String
   var createdAt: Date
@@ -20,8 +21,9 @@ final class Project {
   @Relationship(deleteRule: .nullify, inverse: \TimeRecord.project)
   var timeRecords: [TimeRecord] = []
 
-  init(id: String, name: String, color: String = "blue") {
-    self.id = id
+  init(projectId: String, name: String, color: String = "blue") {
+    self.id = UUID()
+    self.projectId = projectId
     self.name = name
     self.color = color
     self.createdAt = Date()
@@ -30,15 +32,17 @@ final class Project {
 
 @Model
 final class Job {
-  var id: String           // 固定値: "001", "002", "003", "006", "999"
+  var id: UUID             // システム内部管理用の一意識別子
+  var jobId: String        // 固定値: "001", "002", "003", "006", "999"
   var name: String         // 固定値: 対応する作業区分名
   var createdAt: Date
-  
+
   @Relationship(deleteRule: .nullify, inverse: \TimeRecord.job)
   var timeRecords: [TimeRecord] = []
-  
-  init(id: String, name: String) {
-    self.id = id
+
+  init(jobId: String, name: String) {
+    self.id = UUID()
+    self.jobId = jobId
     self.name = name
     self.createdAt = Date()
   }
@@ -64,35 +68,35 @@ final class TimeRecord {
   var job: Job?
   
   // Backup data for deleted entities
-  var projectId: String        // Project.id のバックアップ
-  var projectName: String      // Project.name のバックアップ
-  var projectColor: String     // Project.color のバックアップ
-  var jobId: String           // Job.id のバックアップ
-  var jobName: String         // Job.name のバックアップ
-  
+  var backupProjectId: String     // Project.projectId のバックアップ
+  var backupProjectName: String   // Project.name のバックアップ
+  var backupProjectColor: String  // Project.color のバックアップ
+  var backupJobId: String         // Job.jobId のバックアップ
+  var backupJobName: String       // Job.name のバックアップ
+
   var duration: TimeInterval {
     let end = endTime ?? Date()
     return end.timeIntervalSince(startTime)
   }
-  
+
   // Display properties
-  var displayProjectId: String { project?.id ?? projectId }
-  var displayProjectName: String { project?.name ?? projectName }
-  var displayProjectColor: String { project?.color ?? projectColor }
-  var displayJobId: String { job?.id ?? jobId }
-  var displayJobName: String { job?.name ?? jobName }
+  var displayProjectId: String { project?.projectId ?? backupProjectId }
+  var displayProjectName: String { project?.name ?? backupProjectName }
+  var displayProjectColor: String { project?.color ?? backupProjectColor }
+  var displayJobId: String { job?.jobId ?? backupJobId }
+  var displayJobName: String { job?.name ?? backupJobName }
 
   init(startTime: Date, project: Project, job: Job) {
     self.id = UUID()
     self.startTime = startTime
     self.project = project
     self.job = job
-    
+
     // Backup data
-    self.projectId = project.id
-    self.projectName = project.name
-    self.projectColor = project.color
-    self.jobId = job.id
-    self.jobName = job.name
+    self.backupProjectId = project.projectId
+    self.backupProjectName = project.name
+    self.backupProjectColor = project.color
+    self.backupJobId = job.jobId
+    self.backupJobName = job.name
   }
 }

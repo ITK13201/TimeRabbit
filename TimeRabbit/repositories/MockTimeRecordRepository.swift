@@ -20,7 +20,7 @@ class MockTimeRecordRepository: TimeRecordRepositoryProtocol {
   init(projects: [Project], withSampleData: Bool = false) {
     self.projects = projects
     // 固定Jobを初期化
-    self.jobs = Job.predefinedJobs.map { Job(id: $0.0, name: $0.1) }
+    self.jobs = Job.predefinedJobs.map { Job(jobId: $0.0, name: $0.1) }
     if withSampleData {
       setupSampleTimeRecords()
     }
@@ -70,7 +70,7 @@ class MockTimeRecordRepository: TimeRecordRepositoryProtocol {
   
   func fetchTimeRecords(for project: Project?, from startDate: Date, to endDate: Date) throws -> [TimeRecord] {
     return timeRecords.filter { record in
-      let matchesProject = project == nil || record.projectId == project?.id
+      let matchesProject = project == nil || record.backupProjectId == project?.projectId
       let inDateRange = record.startTime >= startDate && record.startTime <= endDate
       return matchesProject && inDateRange
     }.sorted { $0.startTime > $1.startTime }
@@ -87,16 +87,16 @@ class MockTimeRecordRepository: TimeRecordRepositoryProtocol {
     guard try validateTimeRange(startTime: startTime, endTime: endTime, excludingRecord: record) else {
       throw TimeRecordError.invalidTimeRange
     }
-    
+
     record.startTime = startTime
     record.endTime = endTime
     record.project = project
     record.job = job
-    record.projectId = project.id
-    record.projectName = project.name
-    record.projectColor = project.color
-    record.jobId = job.id
-    record.jobName = job.name
+    record.backupProjectId = project.projectId
+    record.backupProjectName = project.name
+    record.backupProjectColor = project.color
+    record.backupJobId = job.jobId
+    record.backupJobName = job.name
   }
   
   func validateTimeRange(startTime: Date, endTime: Date, excludingRecord: TimeRecord? = nil) throws -> Bool {
