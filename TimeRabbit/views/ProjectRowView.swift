@@ -23,7 +23,7 @@ struct ProjectRowView: View {
         .frame(width: 12, height: 12)
 
       VStack(alignment: .leading, spacing: 2) {
-        Text(viewModel.project.id)
+        Text(viewModel.project.projectId)
           .font(.caption)
           .foregroundColor(.secondary)
         Text(viewModel.project.name)

@@ -84,7 +84,7 @@ struct EditHistoryViewModelTests {
     // Get default job for testing
     let mockJobRepo = MockJobRepository()
     let jobs = try! mockJobRepo.fetchAllJobs()
-    let defaultJob = jobs.first { $0.id == "001" }!
+    let defaultJob = jobs.first { $0.jobId == "001" }!
 
     // Create an incomplete record (no endTime)
     let incompleteRecord = try! mockTimeRecordRepo.startTimeRecord(for: projects[0], job: defaultJob)
@@ -296,7 +296,7 @@ struct EditHistoryViewModelTests {
     )
 
     let jobs = try! mockJobRepo.fetchAllJobs()
-    let defaultJob = jobs.first { $0.id == "001" }!
+    let defaultJob = jobs.first { $0.jobId == "001" }!
 
     // Create first record: 10:00:00 - 11:00:03
     let baseTime = Calendar.current.date(byAdding: .hour, value: -10, to: Date())!
@@ -344,7 +344,7 @@ struct EditHistoryViewModelTests {
     )
 
     let jobs = try! mockJobRepo.fetchAllJobs()
-    let defaultJob = jobs.first { $0.id == "001" }!
+    let defaultJob = jobs.first { $0.jobId == "001" }!
 
     // Create first record: 10:00:00 - 11:00:00
     let baseTime = Calendar.current.date(byAdding: .hour, value: -10, to: Date())!
@@ -388,7 +388,7 @@ struct EditHistoryViewModelTests {
     )
 
     let jobs = try! mockJobRepo.fetchAllJobs()
-    let defaultJob = jobs.first { $0.id == "001" }!
+    let defaultJob = jobs.first { $0.jobId == "001" }!
 
     // Create first record: 10:00:00 - 11:00:00
     let baseTime = Calendar.current.date(byAdding: .hour, value: -10, to: Date())!
@@ -448,7 +448,7 @@ struct EditHistoryViewModelTests {
 
     let expectedJobIds = ["001", "002", "003", "006", "999"]
     for jobId in expectedJobIds {
-      #expect(viewModel.availableJobs.contains(where: { $0.id == jobId }))
+      #expect(viewModel.availableJobs.contains(where: { $0.jobId == jobId }))
     }
   }
 

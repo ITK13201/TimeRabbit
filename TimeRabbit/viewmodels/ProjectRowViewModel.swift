@@ -54,7 +54,7 @@ class ProjectRowViewModel: BaseViewModel {
     if let currentRecord = withLoadingSync({
       try timeRecordRepository.fetchCurrentTimeRecord()
     }) {
-      isActive = currentRecord?.projectId == project.id
+      isActive = currentRecord?.backupProjectId == project.projectId
     } else {
       isActive = false
     }
@@ -64,10 +64,10 @@ class ProjectRowViewModel: BaseViewModel {
   
   func startTracking() {
     guard let selectedJob = selectedJob else {
-        AppLogger.viewModel.warning("No job selected for project: \(self.project.id)")
+        AppLogger.viewModel.warning("No job selected for project: \(self.project.projectId)")
       return
     }
-    
+
     if let _ = withLoadingSync({
       try timeRecordRepository.startTimeRecord(for: project, job: selectedJob)
     }) {
@@ -104,26 +104,26 @@ class ProjectRowViewModel: BaseViewModel {
   func updateSelectedJob(_ job: Job) {
     selectedJob = job
     saveJobSelection()
-    AppLogger.viewModel.debug("Updated selected job for project \(self.project.id): \(job.name)")
+    AppLogger.viewModel.debug("Updated selected job for project \(self.project.projectId): \(job.name)")
   }
-  
+
   func loadSavedJobSelection() {
-    let savedJobId = userDefaults.string(forKey: "selectedJob_\(self.project.id)")
+    let savedJobId = userDefaults.string(forKey: "selectedJob_\(self.project.projectId)")
     if let savedJobId = savedJobId,
-       let savedJob = availableJobs.first(where: { $0.id == savedJobId }) {
+       let savedJob = availableJobs.first(where: { $0.jobId == savedJobId }) {
       selectedJob = savedJob
-      AppLogger.viewModel.debug("Loaded saved job selection for project \(self.project.id): \(savedJob.name)")
+      AppLogger.viewModel.debug("Loaded saved job selection for project \(self.project.projectId): \(savedJob.name)")
     } else {
       // デフォルトは「開発」(001)
-      selectedJob = availableJobs.first { $0.id == "001" }
-      AppLogger.viewModel.debug("Set default job selection for project \(self.project.id): 開発")
+      selectedJob = availableJobs.first { $0.jobId == "001" }
+      AppLogger.viewModel.debug("Set default job selection for project \(self.project.projectId): 開発")
     }
   }
-  
+
   private func saveJobSelection() {
     if let selectedJob = selectedJob {
-      userDefaults.set(selectedJob.id, forKey: "selectedJob_\(self.project.id)")
-      AppLogger.viewModel.debug("Saved job selection for project \(self.project.id): \(selectedJob.name)")
+      userDefaults.set(selectedJob.jobId, forKey: "selectedJob_\(self.project.projectId)")
+      AppLogger.viewModel.debug("Saved job selection for project \(self.project.projectId): \(selectedJob.name)")
     }
   }
 }

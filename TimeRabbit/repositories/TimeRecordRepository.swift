@@ -32,8 +32,8 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
 
   @discardableResult
   func startTimeRecord(for project: Project, job: Job) throws -> TimeRecord {
-    AppLogger.repository.debug("Starting time record for project: \(project.id), job: \(job.id)")
-    
+    AppLogger.repository.debug("Starting time record for project: \(project.projectId), job: \(job.jobId)")
+
     // Stop any current recording
     try stopCurrentTimeRecord()
 
@@ -41,7 +41,7 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
     modelContext.insert(record)
     do {
       try modelContext.save()
-      AppLogger.repository.info("Successfully started time record for project: \(project.id), job: \(job.id)")
+      AppLogger.repository.info("Successfully started time record for project: \(project.projectId), job: \(job.jobId)")
     } catch {
       AppLogger.repository.error("Failed to start time record: \(error)")
       if let swiftDataError = error as? SwiftDataError {
@@ -78,10 +78,10 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
     let descriptor: FetchDescriptor<TimeRecord>
 
     if let project = project {
-      let projectId = project.id
+      let projectId = project.projectId
       descriptor = FetchDescriptor<TimeRecord>(
         predicate: #Predicate<TimeRecord> { record in
-          record.projectId == projectId && record.startTime >= startDate && record.startTime <= endDate
+          record.backupProjectId == projectId && record.startTime >= startDate && record.startTime <= endDate
         },
         sortBy: [SortDescriptor(\.startTime, order: .reverse)]
       )
@@ -136,11 +136,11 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
     record.endTime = endTime
     record.project = project
     record.job = job
-    record.projectId = project.id
-    record.projectName = project.name
-    record.projectColor = project.color
-    record.jobId = job.id
-    record.jobName = job.name
+    record.backupProjectId = project.projectId
+    record.backupProjectName = project.name
+    record.backupProjectColor = project.color
+    record.backupJobId = job.jobId
+    record.backupJobName = job.name
     
     // 保存後の状態をログ
     AppLogger.repository.debug("After update - record.startTime: \(record.startTime)")
