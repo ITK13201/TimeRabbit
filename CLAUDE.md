@@ -157,6 +157,30 @@ All commit messages must follow this format:
 #8 docs: Update architecture documentation
 ```
 
+### Release Procedure
+
+**Quick Reference** (see [docs/operations/release-deployment-procedure.md](docs/operations/release-deployment-procedure.md) for details):
+
+1. **Prepare develop branch**: Ensure all tests pass and changes are committed
+2. **Create PR to main**: Use `gh pr create --base main --head develop` with `Closes #XX` in body
+3. **Merge PR**: Issues auto-close on merge
+4. **Create version tag**: `git tag -a v0.1.0 -m "Release v0.1.0"` then `git push origin v0.1.0`
+5. **GitHub Actions**: Automatically builds and publishes release (ZIP, DMG, checksums)
+6. **Sync develop**: Merge main back to develop
+7. **Update Issues**: Comment release version on closed issues
+
+**Version numbering**: Follow Semantic Versioning (`v{MAJOR}.{MINOR}.{PATCH}`)
+- MAJOR: Breaking changes
+- MINOR: New features (backward compatible)
+- PATCH: Bug fixes
+
+**Branch strategy**:
+- `main`: Production releases (tag from here)
+- `develop`: Integration branch
+- `feature/#XX-name`: Feature branches
+- `bugfix/#XX-name`: Bug fix branches
+- `hotfix/#XX-name`: Emergency fixes (from main)
+
 ## Key Features
 
 1. **Project Management (案件管理)**:

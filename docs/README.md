@@ -46,8 +46,8 @@ CI/CD、リリース、デプロイに関するドキュメント
 
 | ファイル | 説明 | ステータス |
 |---------|------|-----------|
-| [20251003-github-actions-cicd-design.md](operations/20251003-github-actions-cicd-design.md) | GitHub Actions CI/CD設計 | 実装完了 |
-| [20251008-release-deployment-procedure.md](operations/20251008-release-deployment-procedure.md) | リリース・デプロイ手順書 | 設計完了 |
+| [github-actions-cicd.md](operations/github-actions-cicd.md) | GitHub Actions CI/CD設計 | 実装完了 |
+| [release-deployment-procedure.md](operations/release-deployment-procedure.md) | リリース・デプロイ手順書 | 設計完了 |
 
 ---
 
@@ -55,25 +55,32 @@ CI/CD、リリース、デプロイに関するドキュメント
 
 ### ファイル命名規則
 
+**特定の開発タイミングに紐づくドキュメント（日時付き）**:
 ```
 YYYYMMDD-{topic}-{type}.md
 ```
-
 - **YYYYMMDD**: 作成日（例: 20251008）
 - **topic**: トピック名（kebab-case）
-- **type**: `design`, `procedure`, `guideline` など
+- **type**: `design`, `feature` など
+
+**継続的に更新されるドキュメント（日時なし）**:
+```
+{topic}.md
+```
+- **topic**: トピック名（kebab-case）
 
 **例**:
-- `20251008-project-job-systemid-design.md`
-- `20251008-release-deployment-procedure.md`
+- `20251008-project-job-systemid-design.md`（特定の設計）
+- `release-deployment-procedure.md`（継続更新される手順書）
+- `github-actions-cicd.md`（継続更新されるCI/CD設定）
 
 ### 配置先
 
-| カテゴリ | 配置先 | 例 |
-|---------|-------|---|
-| 機能設計 | `development/features/` | 新機能の設計書 |
-| アーキテクチャ設計 | `development/architecture/` | データモデル、設計パターン |
-| CI/CD・リリース | `operations/` | デプロイ手順、ワークフロー設計 |
+| カテゴリ | 配置先 | 命名 | 例 |
+|---------|-------|-----|---|
+| 機能設計 | `development/features/` | 日時付き | 新機能の設計書 |
+| アーキテクチャ設計 | `development/architecture/` | 日時付き | データモデル、設計パターン変更 |
+| 運用・手順書 | `operations/` | 日時なし | デプロイ手順、CI/CD設定 |
 
 ### テンプレート
 
