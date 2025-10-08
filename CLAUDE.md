@@ -13,9 +13,10 @@ The app follows a **1:1 View-ViewModel MVVM pattern** with a repository layer fo
 ### Core Components
 
 - **Models** (`Models.swift`): SwiftData models for `Project`, `Job`, and `TimeRecord` with proper relationships
-  - `Project`: User-defined project with String ID (案件)
-  - `Job`: Fixed work categories (作業区分) with 5 predefined types
-  - `TimeRecord`: Time tracking records with Project + Job associations
+  - `Project`: User-defined project with UUID `id` and String `projectId` (案件)
+  - `Job`: Fixed work categories (作業区分) with UUID `id` and String `jobId`
+  - `TimeRecord`: Time tracking records with UUID `id` and Project + Job associations
+  - **Identifier Convention**: All models use UUID `id` for object identity, String `projectId`/`jobId` for business logic
 - **Repositories** (`repositories/`): Data persistence layer using SwiftData's ModelContext
   - `ProjectRepository.swift`: Project-specific operations with ID uniqueness validation
   - `TimeRecordRepository.swift`: Time tracking operations with update/delete capabilities and Job support
@@ -62,12 +63,13 @@ Each View has its dedicated ViewModel following single responsibility principle:
 - **Mock Strategy**: Mock repositories enable SwiftUI previews and facilitate testing
 - **Base ViewModel**: Common functionality like error handling, loading states through BaseViewModel
 - **Data Integrity**: SwiftData models with proper cascade/nullify relationships
-- **Defensive Design**: TimeRecords preserve project and job info even when they are deleted
+- **Defensive Design**: TimeRecords preserve project and job info even when they are deleted (using `backup*` prefix fields)
 - **Shared State Management**: DateService provides synchronized date selection between statistics and history screens
 - **Copy Functionality**: Statistics screen includes Markdown-formatted data export with visual feedback
 - **Job Selection Persistence**: UserDefaults stores job selection per project for consistent user experience
 - **Auto-Refresh**: Statistics auto-refresh when history records are edited via Combine observation
 - **Flexible Time Validation**: Time overlap validation allows records within 60 seconds proximity for realistic usage patterns
+- **Unified Identifier System**: All models use UUID `id` for object identity; `projectId`/`jobId` (String) exclusively for business logic and user display
 
 ## Development Commands
 
@@ -132,6 +134,29 @@ xcodebuild test -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'p
   - Auto-publishes to GitHub Releases with generated release notes
 - Test failures block releases (tests must pass before deployment)
 
+### Git Commit Message Convention
+All commit messages must follow this format:
+```
+#[issue_number] [type]: [message]
+```
+
+**Types:**
+- `feature`: New feature implementation
+- `bugfix`: Bug fix
+- `hotfix`: Critical/urgent fix
+- `docs`: Documentation changes
+- `refactor`: Code refactoring without behavior change
+- `test`: Test-related changes
+- `chore`: Build process or auxiliary tool changes
+
+**Examples:**
+```
+#2 feature: Unify identifier naming with UUID-based id for all models
+#15 bugfix: Fix time overlap validation logic
+#23 hotfix: Resolve critical data loss issue in repository
+#8 docs: Update architecture documentation
+```
+
 ## Key Features
 
 1. **Project Management (案件管理)**:
@@ -192,6 +217,10 @@ xcodebuild test -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'p
 - **Testing Policy**: Execute unit tests (TimeRabbitTests/) but exclude UITests (TimeRabbitUITests/) from automated execution
 - **Logging**: Use AppLogger for structured logging (AppLogger.app, AppLogger.repository, AppLogger.viewModel, etc.)
 - **Time Validation**: Understand that time overlap validation allows 60-second proximity between records (see `validateTimeRange()` in repositories)
+- **Identifier Usage (CRITICAL)**:
+  - **Object identity/comparison**: ALWAYS use `id` (UUID) - e.g., `$0.id == object.id`, `project.id == anotherProject.id`
+  - **Business logic/display**: ALWAYS use `projectId`/`jobId` (String) - e.g., `project.projectId == "PRJ001"`, UI display, statistics grouping
+  - **Never mix these**: Using `projectId` for object identity comparison is incorrect and will cause bugs
 
 ### Adding New Features
 
@@ -277,10 +306,22 @@ let viewModel = factory.createYourViewModel()
 // Job selection pattern in ViewModels
 let mockJobRepo = MockJobRepository()
 let jobs = try! mockJobRepo.fetchAllJobs()
-let defaultJob = jobs.first { $0.id == "001" } // 開発
+let defaultJob = jobs.first { $0.jobId == "001" } // 開発
 
 // Starting time record with Job
 try timeRecordRepository.startTimeRecord(for: project, job: selectedJob)
+
+// Identifier usage examples
+// ✅ CORRECT - Object identity with UUID
+projects.removeAll { $0.id == project.id }
+if record.id == editingRecord.id { ... }
+
+// ✅ CORRECT - Business logic with String
+let proj = projects.first { $0.projectId == "PRJ001" }
+let job = jobs.first { $0.jobId == "001" }
+
+// ❌ WRONG - Never use projectId/jobId for object identity
+projects.removeAll { $0.projectId == project.projectId } // BUG!
 
 // Logging usage
 AppLogger.app.info("Application started")
