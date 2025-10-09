@@ -87,9 +87,7 @@ jobs:
             -scheme TimeRabbit \
             -configuration Release \
             -archivePath ${{ runner.temp }}/TimeRabbit.xcarchive \
-            CODE_SIGN_IDENTITY="-" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGN_IDENTITY="-"
 
       - name: Export app
         run: |
@@ -97,6 +95,17 @@ jobs:
             -archivePath ${{ runner.temp }}/TimeRabbit.xcarchive \
             -exportPath ${{ runner.temp }}/export \
             -exportOptionsPlist exportOptions.plist
+
+      - name: Verify code signature
+        run: |
+          echo "=== Verifying code signature ==="
+          codesign -dv --verbose=4 ${{ runner.temp }}/export/TimeRabbit.app 2>&1 || true
+          echo ""
+          echo "=== Verifying signature validity ==="
+          codesign --verify --verbose=4 ${{ runner.temp }}/export/TimeRabbit.app 2>&1 || true
+          echo ""
+          echo "=== Checking executable ==="
+          file ${{ runner.temp }}/export/TimeRabbit.app/Contents/MacOS/TimeRabbit
 
       - name: Create ZIP archive
         run: |
@@ -128,26 +137,45 @@ jobs:
 
           $CHANGES
 
+          ## ⚠️ macOS Gatekeeper Warning
+
+          ### If you see "app is damaged and can't be opened" error:
+
+          This application is not signed with an Apple Developer certificate. If macOS shows an error message saying the app is damaged, follow these steps:
+
+          #### Solution 1: Remove quarantine attribute (Recommended)
+          1. Open Terminal
+          2. Run the following command:
+             \`\`\`bash
+             xattr -cr /Applications/TimeRabbit.app
+             \`\`\`
+             (Replace \`/Applications/TimeRabbit.app\` with the actual path to your app)
+          3. Try opening the app again
+
+          #### Solution 2: Use System Settings (macOS Ventura or later)
+          1. Try to open the app (you will see an error)
+          2. Go to **System Settings** → **Privacy & Security**
+          3. Scroll down to the **Security** section
+          4. Click **"Open Anyway"** next to the TimeRabbit message
+          5. Click **"Open"** in the confirmation dialog
+
+          #### Why does this happen?
+
+          This is a macOS security feature for unsigned applications downloaded from the internet. The app is safe to use - you can verify the integrity using the SHA256 checksum provided below.
+
           ## Installation
 
           ### Option 1: Using ZIP file (Recommended)
           1. Download \`TimeRabbit-${{ steps.version.outputs.version }}.zip\`
           2. Extract the zip file
           3. Move \`TimeRabbit.app\` to your Applications folder
-          4. Right-click on \`TimeRabbit.app\` and select "Open" (first time only)
-          5. Click "Open" in the dialog that appears
+          4. **Important:** Follow the Gatekeeper warning instructions above before first launch
 
           ### Option 2: Using DMG file
           1. Download \`TimeRabbit-${{ steps.version.outputs.version }}.dmg\`
           2. Open the DMG file
           3. Drag \`TimeRabbit.app\` to the Applications folder
-          4. Right-click on \`TimeRabbit.app\` and select "Open" (first time only)
-          5. Click "Open" in the dialog that appears
-
-          ## Notes
-
-          This build is not signed with an Apple Developer certificate. macOS Gatekeeper will show a warning on first launch.
-          To bypass this warning, right-click on the app and select "Open" instead of double-clicking.
+          4. **Important:** Follow the Gatekeeper warning instructions above before first launch
 
           ## Checksums
 
