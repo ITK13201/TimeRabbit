@@ -181,6 +181,25 @@ All commit messages must follow this format:
 - `bugfix/#XX-name`: Bug fix branches
 - `hotfix/#XX-name`: Emergency fixes (from main)
 
+### Issue Management
+
+**Labels**:
+- `bug`: Something isn't working
+- `enhancement`: New feature or request
+- `documentation`: Improvements or additions to documentation
+- `priority: high`: High priority issue (red)
+- `priority: medium`: Medium priority issue (yellow)
+- `priority: low`: Low priority issue (green)
+
+**Issue workflow**:
+1. Create issue with descriptive title and detailed body
+2. Add appropriate labels (`bug`, `enhancement`, etc.)
+3. Add priority label if needed
+4. Create feature/bugfix branch: `feature/#XX-description`
+5. Reference issue in commits: `#XX type: message`
+6. Create PR with `Closes #XX` in body
+7. Issue auto-closes on PR merge
+
 ## Key Features
 
 1. **Project Management (案件管理)**:
