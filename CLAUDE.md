@@ -177,6 +177,12 @@ All commit messages must follow this format:
 
 ### Issue Management
 
+**Language Policy**:
+- **All GitHub Issues and Pull Requests must be written in Japanese**
+- Issue titles, descriptions, and PR descriptions should be in Japanese
+- Code comments and documentation can remain in English
+- Commit messages follow the English convention (`#XX type: message`)
+
 **Labels**:
 - `bug`: Something isn't working
 - `enhancement`: New feature or request
@@ -186,13 +192,42 @@ All commit messages must follow this format:
 - `priority: low`: Low priority issue (green)
 
 **Issue workflow**:
-1. Create issue with descriptive title and detailed body
+1. Create issue with descriptive title and detailed body (in Japanese)
 2. Add appropriate labels (`bug`, `enhancement`, etc.)
 3. Add priority label if needed
 4. Create feature/bugfix branch: `feature/#XX-description`
-5. Reference issue in commits: `#XX type: message`
-6. Create PR with `Closes #XX` in body
+5. Reference issue in commits: `#XX type: message` (commit message in English)
+6. Create PR with `Closes #XX` in body (PR title and description in Japanese)
 7. Issue auto-closes on PR merge
+
+**Example Issue (Japanese)**:
+```
+Title: リリースビルドがmacOS Gatekeeperで「壊れている」と表示される問題
+Body:
+## 概要
+GitHub Releaseからダウンロードしたアプリが起動できない...
+
+## 現在の動作
+1. GitHub ReleaseからZIPをダウンロード
+2. 展開してアプリをダブルクリック
+3. エラーが表示される
+...
+```
+
+**Example PR (Japanese)**:
+```
+Title: Gatekeeper対応の改善（Phase 1 & 2）
+Body:
+Closes #5
+
+## 概要
+リリースノートにGatekeeper警告を追加し、ad-hoc署名プロセスを改善します。
+
+## 変更内容
+- リリースノートに回避策を追加
+- 署名検証ステップを追加
+...
+```
 
 ## Key Features
 
