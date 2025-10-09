@@ -76,13 +76,7 @@ Each View has its dedicated ViewModel following single responsibility principle:
 ### Building and Running
 ```bash
 # Build the project
-xcodebuild -project TimeRabbit.xcodeproj -scheme TimeRabbit build
-
-# Build and run
 xcodebuild -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'platform=macOS' build
-
-# Build project
-xcodebuild build -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'platform=macOS'
 
 # Run UnitTests only (UITests excluded)
 xcodebuild test -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'platform=macOS' -testPlan TimeRabbitTests
