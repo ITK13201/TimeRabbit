@@ -77,45 +77,31 @@ TimeRabbitプロジェクトにGitHub Actionsを使用したCI/CDパイプライ
 
 ### ワークフロー構成
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                  GitHub Repository                       │
-└───────────────────┬─────────────────────────────────────┘
-                    │
-        ┌───────────┴───────────┐
-        │                       │
-        ▼                       ▼
-┌───────────────┐      ┌────────────────┐
-│  Pull Request │      │  Tag Push      │
-│  Main Push    │      │  (v*.*.*)      │
-└───────┬───────┘      └────────┬───────┘
-        │                       │
-        ▼                       ▼
-┌───────────────┐      ┌────────────────────────┐
-│   CI Workflow │      │  Release Workflow      │
-├───────────────┤      ├────────────────────────┤
-│ - Checkout    │      │ Job 1: Test            │
-│ - Setup Xcode │      │ - Checkout             │
-│ - Run Tests   │      │ - Setup Xcode          │
-│ - Report      │      │ - Run Tests            │
-└───────────────┘      │ - Report               │
-                       │                        │
-                       │ Job 2: Build (needs: test)│
-                       │ - Checkout             │
-                       │ - Setup Xcode          │
-                       │ - Build Release        │
-                       │ - Sign App             │
-                       │ - Create DMG           │
-                       │ - Upload               │
-                       └────────┬───────────────┘
-                                │
-                                ▼
-                       ┌────────────────┐
-                       │ GitHub Release │
-                       │ - App (zip)    │
-                       │ - DMG          │
-                       │ - Notes        │
-                       └────────────────┘
+```mermaid
+flowchart TD
+    Repo[GitHub Repository]
+
+    Repo --> PR[Pull Request / Main Push]
+    Repo --> Tag[Tag Push v*.*.*]
+
+    PR --> CI[CI Workflow]
+    Tag --> Release[Release Workflow]
+
+    subgraph CI[CI Workflow]
+        direction TB
+        FormatCheck[Job 1: Format Check<br/>- Checkout<br/>- Install SwiftFormat<br/>- Check Format]
+        Test[Job 2: Test<br/>- Checkout<br/>- Setup Xcode<br/>- Run Tests<br/>- Report]
+        FormatCheck --> Test
+    end
+
+    subgraph Release[Release Workflow]
+        direction TB
+        TestJob[Job 1: Test<br/>- Checkout<br/>- Setup Xcode<br/>- Run Tests<br/>- Report]
+        BuildJob[Job 2: Build<br/>- Checkout<br/>- Setup Xcode<br/>- Build Release<br/>- Sign App<br/>- Create DMG<br/>- Upload]
+        TestJob --> BuildJob
+    end
+
+    Release --> GHRelease[GitHub Release<br/>- App zip<br/>- DMG<br/>- Notes]
 ```
 
 ### ディレクトリ構成
@@ -149,18 +135,56 @@ on:
 
 #### ジョブ定義
 
+**2段階構成**:
+1. **format-check ジョブ**: SwiftFormatでコードフォーマットをチェック
+2. **test ジョブ**: format-check成功後にユニットテストを実行
+
+**Job 1: Format Check**
+
 ```yaml
 jobs:
-  test:
-    name: Run Tests
-    runs-on: macos-14  # macOS Sonoma
+  format-check:
+    name: Check SwiftFormat
+    runs-on: macos-15
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Install SwiftFormat
+        run: brew install swiftformat
+
+      - name: Check SwiftFormat
+        run: |
+          echo "Checking SwiftFormat compliance..."
+          swiftformat --lint . --exclude TimeRabbit.xcodeproj,build,.build
+          if [ $? -ne 0 ]; then
+            echo "❌ SwiftFormat check failed. Please run 'swiftformat .' locally and commit the changes."
+            exit 1
+          fi
+          echo "✅ SwiftFormat check passed!"
+```
+
+**設計ポイント**:
+- `swiftformat --lint`: フォーマットチェックのみ（変更なし）
+- フォーマット違反が検出されるとジョブが失敗し、PR/pushがブロックされる
+- `.swiftformat`設定ファイルを自動的に読み込む（`--self insert`など）
+- format-check失敗時はtestジョブは実行されない
+
+**Job 2: Test (needs: format-check)**
+
+```yaml
+  test:
+    name: Run Tests
+    runs-on: macos-15
+    needs: format-check  # format-checkジョブ成功後に実行
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
 
       - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
       - name: Show Xcode version
         run: xcodebuild -version
@@ -175,14 +199,14 @@ jobs:
 
       - name: Run unit tests
         run: |
+          set -o pipefail
           xcodebuild test \
             -project TimeRabbit.xcodeproj \
             -scheme TimeRabbit \
             -destination 'platform=macOS' \
             -testPlan TimeRabbitTests \
             -enableCodeCoverage YES \
-            | tee test-output.log \
-            | xcpretty
+            | tee test-output.log
 
       - name: Upload test results
         if: always()
@@ -190,18 +214,23 @@ jobs:
         with:
           name: test-results
           path: test-output.log
+          retention-days: 30
 
       - name: Check test results
         if: failure()
-        run: cat test-output.log
+        run: |
+          echo "Tests failed. Showing output:"
+          cat test-output.log
 ```
 
 **設計ポイント**:
-- `macos-14`: macOS Sonoma（最新の安定版）
-- `xcpretty`: テスト出力を見やすく整形
+- `macos-15`: macOS Sequoia（最新の安定版）
+- `Xcode 16.4`: 最新のXcodeバージョン
+- `needs: format-check`: フォーマットチェック成功後のみ実行
 - `actions/cache`: DerivedDataをキャッシュしてビルド時間短縮
 - `always()`: テスト失敗時もログをアップロード
 - `enableCodeCoverage`: コードカバレッジ測定
+- `retention-days: 30`: テスト結果を30日間保存
 
 ### CD/リリース ワークフロー (release.yml)
 
@@ -443,16 +472,21 @@ echo "DMG created: $OUTPUT_DMG"
 
 ### Phase 1: CI実装 ✅ 完了
 - [x] ci.ymlワークフロー作成
-- [x] Pull Request時の自動テスト実行
-- [x] mainブランチpush時の自動テスト実行
+- [x] SwiftFormatチェックジョブの追加
+- [x] Pull Request時の自動フォーマット＋テスト実行
+- [x] mainブランチpush時の自動フォーマット＋テスト実行
 - [x] テスト結果の可視化（アーティファクトとしてアップロード）
 
 **実装内容**:
 - `.github/workflows/ci.yml`
-- macOS 14ランナー使用
-- Xcode 15.4指定
+- 2段階ジョブ構成（format-check → test）
+- macOS 15ランナー使用
+- Xcode 16.4指定
+- SwiftFormat自動インストール＆チェック（`--lint`モード）
+- `.swiftformat`設定ファイル対応（`--self insert`など）
 - キャッシュ機能有効（DerivedData）
 - テスト結果を30日間保存
+- フォーマット違反時はPR/pushをブロック
 
 ### Phase 2: 署名なしリリース ✅ 完了
 - [x] release.ymlワークフロー作成
@@ -561,7 +595,7 @@ Apple Developer Programへの登録コストを回避するメリットが上回
 
 2. **静的解析**
    - SwiftLintの導入
-   - SwiftFormatの自動適用
+   - より高度なコード品質チェック
 
 3. **依存関係の自動更新**
    - Dependabotの活用

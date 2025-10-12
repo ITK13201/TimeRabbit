@@ -54,13 +54,86 @@ hotfix/#XX-short-description
 
 ---
 
+## コードフォーマット
+
+### SwiftFormat
+
+プロジェクト全体で統一されたコードスタイルを維持するため、SwiftFormatを使用しています。
+
+#### 設定ファイル
+
+`.swiftformat`で一元管理：
+
+```
+--swiftversion 5.0
+--self insert           # 明示的なself.を追加（Swift 6互換性）
+--enable isEmpty
+--enable sortImports
+```
+
+#### フォーマット実行
+
+```bash
+# 全ファイルをフォーマット
+swiftformat .
+
+# チェックのみ（変更なし）
+swiftformat --lint .
+
+# 特定ファイルのみ
+swiftformat TimeRabbit/viewmodels/ContentViewModel.swift
+```
+
+#### Pre-pushフック
+
+**重要**: Push前に自動的に以下がチェックされます：
+
+1. **SwiftFormat**: コードフォーマット
+2. **Unit Tests**: 全ユニットテスト実行
+
+フォーマットやテストが失敗した場合、Pushはブロックされます。
+
+```bash
+# .git/hooks/pre-push が自動実行
+Running SwiftFormat before push...
+✅ SwiftFormat check passed!
+
+Running unit tests before push...
+✅ Unit tests passed!
+
+All pre-push checks passed. Proceeding with push...
+```
+
+#### フォーマット失敗時の対処
+
+```bash
+# エラーが出た場合
+❌ SwiftFormat made changes to your code.
+
+# 変更を確認
+git diff
+
+# フォーマットを適用してコミット
+swiftformat .
+git add -A
+git commit -m "chore: Apply SwiftFormat"
+git push
+```
+
+---
+
 ## コミットメッセージ規約
 
 ### フォーマット
 
 ```
 #[issue_number] [type]: [message]
+
+# issue番号がない場合は省略
+[type]: [message]
 ```
+
+**注意**: Issue番号がない場合は`#0`ではなく、完全に省略してください。
 
 ### タイプ一覧
 

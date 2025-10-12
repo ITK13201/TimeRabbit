@@ -32,9 +32,11 @@ TimeRabbit/
 │   ├── Assets.xcassets/       # アプリアセット
 │   ├── TimeRabbitApp.swift    # アプリエントリーポイント
 │   ├── Models.swift           # SwiftDataモデル
-│   ├── Logger.swift           # OSLogベースのロギングシステム
-│   ├── DateService.swift      # 日付状態管理サービス
 │   ├── Utils.swift            # ユーティリティ関数
+│   │
+│   ├── services/              # アプリケーション共通サービス
+│   │   ├── DateService.swift  # 日付状態管理サービス
+│   │   └── Logger.swift       # OSLogベースのロギングシステム
 │   │
 │   ├── repositories/          # データ永続化層
 │   │   ├── ProjectRepository.swift
@@ -76,6 +78,8 @@ TimeRabbit/
 │
 ├── TimeRabbitUITests/          # UIテスト（実行除外）
 │
+├── .swiftformat                # SwiftFormat設定ファイル
+├── .gitignore                  # Git除外設定
 ├── TimeRabbitTests.xctestplan # テストプラン（UnitTestsのみ）
 ├── exportOptions.plist         # Xcodeエクスポート設定
 ├── CLAUDE.md                   # Claude Code向けガイド
@@ -110,9 +114,11 @@ TimeRabbit/
 #### ルートレベル
 - **TimeRabbitApp.swift**: アプリケーションエントリーポイント
 - **Models.swift**: SwiftDataモデル定義（Project, Job, TimeRecord）
-- **Logger.swift**: OSLogベースの構造化ロギング
-- **DateService.swift**: 画面間の日付状態共有サービス
 - **Utils.swift**: ユーティリティ関数（日時フォーマット、カラー管理）
+
+#### `services/` - アプリケーション共通サービス
+- **DateService.swift**: 画面間の日付状態共有サービス（Statistics/History間で同期）
+- **Logger.swift**: OSLogベースの構造化ロギング（AppLogger）
 
 #### `repositories/` - データ永続化層
 - **本体実装**: `ProjectRepository`, `TimeRecordRepository`, `JobRepository`
