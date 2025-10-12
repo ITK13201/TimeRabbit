@@ -88,7 +88,7 @@ xcodebuild test -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'p
 
 ### Git Commit Convention
 
-Format: `#[issue_number] [type]: [message]`
+Format: `#[issue_number] [type]: [message]` (omit `#[issue_number]` if no related issue)
 
 **Types:** `feature`, `bugfix`, `hotfix`, `docs`, `refactor`, `test`, `chore`
 
@@ -97,7 +97,13 @@ Format: `#[issue_number] [type]: [message]`
 #2 feature: Unify identifier naming with UUID-based id for all models
 #15 bugfix: Fix time overlap validation logic
 #8 docs: Update architecture documentation
+refactor: Apply SwiftFormat to all files
+chore: Update dependencies
 ```
+
+**Important:**
+- Use `#[issue_number]` prefix ONLY when there is a related issue
+- Do NOT use `#0` for commits without an issue
 
 ### Release Procedure
 
