@@ -19,24 +19,24 @@ struct ProjectRowView: View {
     var body: some View {
         HStack(spacing: 8) {
             Circle()
-                .fill(getProjectColor(from: viewModel.project.color))
+                .fill(getProjectColor(from: self.viewModel.project.color))
                 .frame(width: 12, height: 12)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(viewModel.project.projectId)
+                Text(self.viewModel.project.projectId)
                     .font(.caption)
                     .foregroundColor(.secondary)
-                Text(viewModel.project.name)
-                    .foregroundColor(viewModel.isActive ? .primary : .secondary)
+                Text(self.viewModel.project.name)
+                    .foregroundColor(self.viewModel.isActive ? .primary : .secondary)
             }
             .fixedSize(horizontal: true, vertical: false)
 
             Spacer()
 
             // 作業区分選択プルダウン
-            if !viewModel.isActive {
-                Picker(selection: $viewModel.selectedJob) {
-                    ForEach(viewModel.availableJobs, id: \.id) { job in
+            if !self.viewModel.isActive {
+                Picker(selection: self.$viewModel.selectedJob) {
+                    ForEach(self.viewModel.availableJobs, id: \.id) { job in
                         Text(job.name)
                             .tag(job as Job?)
                     }
@@ -45,19 +45,19 @@ struct ProjectRowView: View {
                 }
                 .pickerStyle(.menu)
                 .frame(width: 120)
-                .onChange(of: viewModel.selectedJob) { _, newJob in
+                .onChange(of: self.viewModel.selectedJob) { _, newJob in
                     if let newJob = newJob {
-                        viewModel.updateSelectedJob(newJob)
+                        self.viewModel.updateSelectedJob(newJob)
                     }
                 }
             } else {
-                Text("作業中: \(viewModel.selectedJob?.name ?? "")")
+                Text("作業中: \(self.viewModel.selectedJob?.name ?? "")")
                     .foregroundColor(.green)
                     .lineLimit(1)
                     .frame(width: 100, alignment: .leading)
             }
 
-            if viewModel.isActive {
+            if self.viewModel.isActive {
                 Button("実行中") {
                     // Already active
                 }
@@ -67,15 +67,15 @@ struct ProjectRowView: View {
                 .frame(width: 50)
             } else {
                 Button("開始") {
-                    viewModel.startTracking()
+                    self.viewModel.startTracking()
                 }
                 .buttonStyle(.borderless)
-                .disabled(viewModel.selectedJob == nil)
+                .disabled(self.viewModel.selectedJob == nil)
                 .frame(width: 30)
             }
 
             Button(action: {
-                viewModel.deleteProject()
+                self.viewModel.deleteProject()
             }) {
                 Image(systemName: "trash")
                     .foregroundColor(.red)

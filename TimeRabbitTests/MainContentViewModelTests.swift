@@ -35,7 +35,7 @@ struct MainContentViewModelTests {
 
     @Test("Statistics should auto-refresh when history edit sheet is closed")
     func statisticsAutoRefreshOnHistoryEdit() async {
-        let (viewModel, _, mockTimeRecordRepo, mockJobRepo, projects, timeRecords) = createTestSetup()
+        let (viewModel, _, mockTimeRecordRepo, mockJobRepo, projects, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -76,7 +76,7 @@ struct MainContentViewModelTests {
 
     @Test("Statistics should refresh when switching to statistics tab")
     func statisticsRefreshOnTabSwitch() async {
-        let (viewModel, _, _, _, _, _) = createTestSetup()
+        let (viewModel, _, _, _, _, _) = self.createTestSetup()
 
         // 履歴タブから統計タブに切り替え
         #expect(viewModel.selectedTab == 0, "Should start on history tab")
@@ -92,7 +92,7 @@ struct MainContentViewModelTests {
 
     @Test("RefreshAllData should update both history and statistics")
     func testRefreshAllData() async {
-        let (viewModel, _, _, _, _, _) = createTestSetup()
+        let (viewModel, _, _, _, _, _) = self.createTestSetup()
 
         // 初期データを確認
         let initialHistoryCount = viewModel.historyViewModel.dayRecords.count
@@ -108,7 +108,7 @@ struct MainContentViewModelTests {
 
     @Test("Tab selection should work correctly")
     func tabSelection() async {
-        let (viewModel, _, _, _, _, _) = createTestSetup()
+        let (viewModel, _, _, _, _, _) = self.createTestSetup()
 
         // 履歴タブ（初期状態）
         #expect(viewModel.selectedTab == 0)

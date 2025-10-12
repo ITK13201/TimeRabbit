@@ -22,11 +22,11 @@ final class Project {
     var timeRecords: [TimeRecord] = []
 
     init(projectId: String, name: String, color: String = "blue") {
-        id = UUID()
+        self.id = UUID()
         self.projectId = projectId
         self.name = name
         self.color = color
-        createdAt = Date()
+        self.createdAt = Date()
     }
 }
 
@@ -41,10 +41,10 @@ final class Job {
     var timeRecords: [TimeRecord] = []
 
     init(jobId: String, name: String) {
-        id = UUID()
+        self.id = UUID()
         self.jobId = jobId
         self.name = name
-        createdAt = Date()
+        self.createdAt = Date()
     }
 
     // 固定の作業区分一覧
@@ -75,28 +75,28 @@ final class TimeRecord {
     var backupJobName: String // Job.name のバックアップ
 
     var duration: TimeInterval {
-        let end = endTime ?? Date()
-        return end.timeIntervalSince(startTime)
+        let end = self.endTime ?? Date()
+        return end.timeIntervalSince(self.startTime)
     }
 
     // Display properties
-    var displayProjectId: String { project?.projectId ?? backupProjectId }
-    var displayProjectName: String { project?.name ?? backupProjectName }
-    var displayProjectColor: String { project?.color ?? backupProjectColor }
-    var displayJobId: String { job?.jobId ?? backupJobId }
-    var displayJobName: String { job?.name ?? backupJobName }
+    var displayProjectId: String { self.project?.projectId ?? self.backupProjectId }
+    var displayProjectName: String { self.project?.name ?? self.backupProjectName }
+    var displayProjectColor: String { self.project?.color ?? self.backupProjectColor }
+    var displayJobId: String { self.job?.jobId ?? self.backupJobId }
+    var displayJobName: String { self.job?.name ?? self.backupJobName }
 
     init(startTime: Date, project: Project, job: Job) {
-        id = UUID()
+        self.id = UUID()
         self.startTime = startTime
         self.project = project
         self.job = job
 
         // Backup data
-        backupProjectId = project.projectId
-        backupProjectName = project.name
-        backupProjectColor = project.color
-        backupJobId = job.jobId
-        backupJobName = job.name
+        self.backupProjectId = project.projectId
+        self.backupProjectName = project.name
+        self.backupProjectColor = project.color
+        self.backupJobId = job.jobId
+        self.backupJobName = job.name
     }
 }

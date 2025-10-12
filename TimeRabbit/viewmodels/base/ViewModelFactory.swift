@@ -29,51 +29,51 @@ class ViewModelFactory: ObservableObject {
     func createProjectRowViewModel(for project: Project) -> ProjectRowViewModel {
         return ProjectRowViewModel(
             project: project,
-            projectRepository: projectRepository,
-            timeRecordRepository: timeRecordRepository,
-            jobRepository: jobRepository
+            projectRepository: self.projectRepository,
+            timeRecordRepository: self.timeRecordRepository,
+            jobRepository: self.jobRepository
         )
     }
 
     func createAddProjectViewModel() -> AddProjectViewModel {
-        return AddProjectViewModel(projectRepository: projectRepository)
+        return AddProjectViewModel(projectRepository: self.projectRepository)
     }
 
     func createStatisticsViewModel() -> StatisticsViewModel {
-        return StatisticsViewModel(timeRecordRepository: timeRecordRepository, dateService: dateService)
+        return StatisticsViewModel(timeRecordRepository: self.timeRecordRepository, dateService: self.dateService)
     }
 
     func createEditHistoryViewModel() -> EditHistoryViewModel {
         return EditHistoryViewModel(
-            timeRecordRepository: timeRecordRepository,
-            projectRepository: projectRepository,
-            jobRepository: jobRepository
+            timeRecordRepository: self.timeRecordRepository,
+            projectRepository: self.projectRepository,
+            jobRepository: self.jobRepository
         )
     }
 
     func createHistoryViewModel() -> HistoryViewModel {
         return HistoryViewModel(
-            timeRecordRepository: timeRecordRepository,
-            projectRepository: projectRepository,
-            editHistoryViewModel: createEditHistoryViewModel(),
-            dateService: dateService
+            timeRecordRepository: self.timeRecordRepository,
+            projectRepository: self.projectRepository,
+            editHistoryViewModel: self.createEditHistoryViewModel(),
+            dateService: self.dateService
         )
     }
 
     func createMainContentViewModel() -> MainContentViewModel {
         return MainContentViewModel(
-            statisticsViewModel: createStatisticsViewModel(),
-            historyViewModel: createHistoryViewModel()
+            statisticsViewModel: self.createStatisticsViewModel(),
+            historyViewModel: self.createHistoryViewModel()
         )
     }
 
     func createContentViewModel() -> ContentViewModel {
         return ContentViewModel(
-            projectRepository: projectRepository,
-            timeRecordRepository: timeRecordRepository,
-            jobRepository: jobRepository,
-            mainContentViewModel: createMainContentViewModel(),
-            addProjectViewModel: createAddProjectViewModel()
+            projectRepository: self.projectRepository,
+            timeRecordRepository: self.timeRecordRepository,
+            jobRepository: self.jobRepository,
+            mainContentViewModel: self.createMainContentViewModel(),
+            addProjectViewModel: self.createAddProjectViewModel()
         )
     }
 }

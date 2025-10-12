@@ -30,7 +30,7 @@ class ProjectRepository: ProjectRepositoryProtocol, ObservableObject {
 
     func fetchProjects() throws -> [Project] {
         let descriptor = FetchDescriptor<Project>(sortBy: [SortDescriptor(\.name)])
-        return try modelContext.fetch(descriptor)
+        return try self.modelContext.fetch(descriptor)
     }
 
     @discardableResult
@@ -38,15 +38,15 @@ class ProjectRepository: ProjectRepositoryProtocol, ObservableObject {
         AppLogger.repository.debug("Creating project with ID: \(projectId), name: \(name)")
 
         // Check ID uniqueness
-        guard try isProjectIdUnique(projectId, excluding: nil) else {
+        guard try self.isProjectIdUnique(projectId, excluding: nil) else {
             AppLogger.repository.error("Project ID \(projectId) already exists")
             throw ProjectError.duplicateId
         }
 
         let project = Project(projectId: projectId, name: name, color: color)
-        modelContext.insert(project)
+        self.modelContext.insert(project)
         do {
-            try modelContext.save()
+            try self.modelContext.save()
             AppLogger.repository.info("Successfully created project: \(projectId)")
         } catch {
             AppLogger.repository.error("Failed to save project: \(error)")
@@ -63,7 +63,7 @@ class ProjectRepository: ProjectRepositoryProtocol, ObservableObject {
 
         // Check ID uniqueness if ID is changing
         if project.projectId != projectId {
-            guard try isProjectIdUnique(projectId, excluding: project) else {
+            guard try self.isProjectIdUnique(projectId, excluding: project) else {
                 AppLogger.repository.error("Project ID \(projectId) already exists")
                 throw ProjectError.duplicateId
             }
@@ -88,7 +88,7 @@ class ProjectRepository: ProjectRepositoryProtocol, ObservableObject {
         }
 
         do {
-            try modelContext.save()
+            try self.modelContext.save()
             AppLogger.repository.info("Successfully updated project: \(projectId)")
         } catch {
             AppLogger.repository.error("Failed to update project: \(error)")
@@ -100,9 +100,9 @@ class ProjectRepository: ProjectRepositoryProtocol, ObservableObject {
     }
 
     func deleteProject(_ project: Project) throws {
-        modelContext.delete(project)
+        self.modelContext.delete(project)
         do {
-            try modelContext.save()
+            try self.modelContext.save()
         } catch {
             AppLogger.repository.error("Failed to delete project: \(error)")
             if let swiftDataError = error as? SwiftDataError {
@@ -143,7 +143,7 @@ class ProjectRepository: ProjectRepositoryProtocol, ObservableObject {
                 record.backupProjectId == projectId
             }
         )
-        return try modelContext.fetch(descriptor)
+        return try self.modelContext.fetch(descriptor)
     }
 }
 

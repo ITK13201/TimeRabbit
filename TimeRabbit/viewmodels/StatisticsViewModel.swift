@@ -30,31 +30,31 @@ class StatisticsViewModel: BaseViewModel {
         self.dateService = dateService
         super.init()
 
-        setupDateObserver()
-        loadStatistics()
+        self.setupDateObserver()
+        self.loadStatistics()
     }
 
     private func setupDateObserver() {
-        dateService.$selectedDate
+        self.dateService.$selectedDate
             .sink { [weak self] _ in
                 self?.loadStatistics()
             }
-            .store(in: &cancellables)
+            .store(in: &self.cancellables)
 
-        dateService.$showingDatePicker
+        self.dateService.$showingDatePicker
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 DispatchQueue.main.async {
                     self?.objectWillChange.send()
                 }
             }
-            .store(in: &cancellables)
+            .store(in: &self.cancellables)
     }
 
     // MARK: - Data Loading
 
     func loadStatistics() {
-        let startOfDay = Calendar.current.startOfDay(for: dateService.selectedDate)
+        let startOfDay = Calendar.current.startOfDay(for: self.dateService.selectedDate)
         let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
 
         if let records = withLoadingSync({
@@ -69,7 +69,7 @@ class StatisticsViewModel: BaseViewModel {
             }
 
             // 統計データを計算
-            projectJobDetails = groupedRecords.map { _, records in
+            self.projectJobDetails = groupedRecords.map { _, records in
                 let firstRecord = records.first!
                 let projectId = firstRecord.displayProjectId
                 let projectName = firstRecord.displayProjectName
@@ -81,35 +81,35 @@ class StatisticsViewModel: BaseViewModel {
             }.sorted { $0.duration > $1.duration } // 時間順でソート
 
             // 後方互換性のため、既存のprojectJobTimesも更新
-            projectJobTimes = projectJobDetails.map { detail in
+            self.projectJobTimes = self.projectJobDetails.map { detail in
                 (detail.projectName, detail.jobName, detail.projectColor, detail.duration)
             }
 
             // 総作業時間を計算
-            totalTime = completedRecords.reduce(0) { $0 + $1.duration }
+            self.totalTime = completedRecords.reduce(0) { $0 + $1.duration }
         }
     }
 
     func refreshData() {
-        loadStatistics()
+        self.loadStatistics()
     }
 
     // MARK: - Date Picker Methods
 
     func toggleDatePicker() {
-        dateService.toggleDatePicker()
+        self.dateService.toggleDatePicker()
     }
 
     func hideDatePicker() {
-        dateService.hideDatePicker()
+        self.dateService.hideDatePicker()
     }
 
     func getFormattedDate() -> String {
-        return dateService.getFormattedDate()
+        return self.dateService.getFormattedDate()
     }
 
     func getEmptyMessage() -> String {
-        if Calendar.current.isDateInToday(dateService.selectedDate) {
+        if Calendar.current.isDateInToday(self.dateService.selectedDate) {
             return "今日はまだ作業記録がありません"
         } else {
             return "この日の作業記録はありません"
@@ -117,27 +117,27 @@ class StatisticsViewModel: BaseViewModel {
     }
 
     var showingDatePicker: Bool {
-        return dateService.showingDatePicker
+        return self.dateService.showingDatePicker
     }
 
     var selectedDate: Date {
-        get { dateService.selectedDate }
-        set { dateService.selectedDate = newValue }
+        get { self.dateService.selectedDate }
+        set { self.dateService.selectedDate = newValue }
     }
 
     // MARK: - Helper Methods
 
     func getPercentage(for duration: TimeInterval) -> Double {
-        guard totalTime > 0 else { return 0 }
-        return (duration / totalTime) * 100
+        guard self.totalTime > 0 else { return 0 }
+        return (duration / self.totalTime) * 100
     }
 
     var hasData: Bool {
-        return !projectJobTimes.isEmpty
+        return !self.projectJobTimes.isEmpty
     }
 
     func getFormattedTotalTime() -> String {
-        return formatDuration(totalTime)
+        return formatDuration(self.totalTime)
     }
 
     func getFormattedDuration(_ duration: TimeInterval) -> String {
@@ -145,16 +145,16 @@ class StatisticsViewModel: BaseViewModel {
     }
 
     func generateStatisticsText() -> String {
-        let dateText = getFormattedDate()
-        let totalTimeText = getFormattedTotalTime()
+        let dateText = self.getFormattedDate()
+        let totalTimeText = self.getFormattedTotalTime()
 
         var result = "# \(dateText) の作業統計\n\n"
         result += "**総作業時間**: \(totalTimeText)\n\n"
 
-        if !projectJobTimes.isEmpty {
+        if !self.projectJobTimes.isEmpty {
             result += "## 案件・作業区分別作業時間\n\n"
-            for (projectName, jobName, _, duration) in projectJobTimes {
-                let formattedDuration = getFormattedDuration(duration)
+            for (projectName, jobName, _, duration) in self.projectJobTimes {
+                let formattedDuration = self.getFormattedDuration(duration)
                 let percentage = String(format: "%.1f", getPercentage(for: duration))
                 result += "- **\(projectName)** - \(jobName): \(formattedDuration) (\(percentage)%)\n"
             }
@@ -166,10 +166,10 @@ class StatisticsViewModel: BaseViewModel {
     func generateCommandText() -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy/MM/dd"
-        let dateText = dateFormatter.string(from: dateService.selectedDate)
+        let dateText = dateFormatter.string(from: self.dateService.selectedDate)
 
         var result = ""
-        for detail in projectJobDetails {
+        for detail in self.projectJobDetails {
             let percentage = Int(round(getPercentage(for: detail.duration)))
             result += "add \(dateText) \(detail.projectId) \(detail.jobId) \(percentage)\n"
         }
@@ -180,7 +180,7 @@ class StatisticsViewModel: BaseViewModel {
     func generateCommand(for detail: (projectId: String, projectName: String, projectColor: String, jobId: String, jobName: String, duration: TimeInterval)) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy/MM/dd"
-        let dateText = dateFormatter.string(from: dateService.selectedDate)
+        let dateText = dateFormatter.string(from: self.dateService.selectedDate)
         let percentage = Int(round(getPercentage(for: detail.duration)))
         return "add \(dateText) \(detail.projectId) \(detail.jobId) \(percentage)"
     }

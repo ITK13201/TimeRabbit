@@ -35,12 +35,12 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
         AppLogger.repository.debug("Starting time record for project: \(project.projectId), job: \(job.jobId)")
 
         // Stop any current recording
-        try stopCurrentTimeRecord()
+        try self.stopCurrentTimeRecord()
 
         let record = TimeRecord(startTime: Date(), project: project, job: job)
-        modelContext.insert(record)
+        self.modelContext.insert(record)
         do {
-            try modelContext.save()
+            try self.modelContext.save()
             AppLogger.repository.info("Successfully started time record for project: \(project.projectId), job: \(job.jobId)")
         } catch {
             AppLogger.repository.error("Failed to start time record: \(error)")
@@ -56,7 +56,7 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
         guard let currentRecord = try fetchCurrentTimeRecord() else { return }
         currentRecord.endTime = Date()
         do {
-            try modelContext.save()
+            try self.modelContext.save()
         } catch {
             AppLogger.repository.error("Failed to stop time record: \(error)")
             if let swiftDataError = error as? SwiftDataError {
@@ -71,7 +71,7 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
             predicate: #Predicate<TimeRecord> { $0.endTime == nil },
             sortBy: [SortDescriptor(\.startTime, order: .reverse)]
         )
-        return try modelContext.fetch(descriptor).first
+        return try self.modelContext.fetch(descriptor).first
     }
 
     func fetchTimeRecords(for project: Project? = nil, from startDate: Date, to endDate: Date) throws -> [TimeRecord] {
@@ -94,13 +94,13 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
             )
         }
 
-        return try modelContext.fetch(descriptor)
+        return try self.modelContext.fetch(descriptor)
     }
 
     func deleteTimeRecord(_ record: TimeRecord) throws {
-        modelContext.delete(record)
+        self.modelContext.delete(record)
         do {
-            try modelContext.save()
+            try self.modelContext.save()
         } catch {
             AppLogger.repository.error("Failed to delete time record: \(error)")
             if let swiftDataError = error as? SwiftDataError {
@@ -120,7 +120,7 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
         AppLogger.repository.debug("New startTime: \(startTime)")
         AppLogger.repository.debug("New endTime: \(endTime)")
 
-        guard try validateTimeRange(startTime: startTime, endTime: endTime, excludingRecord: record) else {
+        guard try self.validateTimeRange(startTime: startTime, endTime: endTime, excludingRecord: record) else {
             AppLogger.repository.warning("Validation failed for time range")
             throw TimeRecordError.invalidTimeRange
         }
@@ -150,7 +150,7 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
         AppLogger.swiftData.debug("About to save to ModelContext")
 
         do {
-            try modelContext.save()
+            try self.modelContext.save()
             AppLogger.swiftData.info("ModelContext.save() completed successfully")
         } catch {
             AppLogger.swiftData.critical("ModelContext.save() failed")
@@ -214,7 +214,7 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
 
         let allCompletedRecords: [TimeRecord]
         do {
-            allCompletedRecords = try modelContext.fetch(completedRecordsDescriptor)
+            allCompletedRecords = try self.modelContext.fetch(completedRecordsDescriptor)
             AppLogger.database.debug("Successfully fetched \(allCompletedRecords.count) completed records")
         } catch {
             AppLogger.database.critical("Failed to fetch completed records")

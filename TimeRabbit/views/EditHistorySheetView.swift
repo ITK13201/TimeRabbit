@@ -16,8 +16,8 @@ struct EditHistorySheetView: View {
             // カスタムナビゲーションバー
             HStack {
                 Button("キャンセル") {
-                    viewModel.cancel()
-                    dismiss()
+                    self.viewModel.cancel()
+                    self.dismiss()
                 }
 
                 Spacer()
@@ -30,18 +30,18 @@ struct EditHistorySheetView: View {
 
                 HStack(spacing: 12) {
                     Button("削除") {
-                        viewModel.showDeleteConfirmation()
+                        self.viewModel.showDeleteConfirmation()
                     }
                     .foregroundColor(.red)
-                    .disabled(!viewModel.canDelete)
+                    .disabled(!self.viewModel.canDelete)
 
                     Button("保存") {
-                        viewModel.saveChanges()
-                        if viewModel.errorMessage == nil {
-                            dismiss()
+                        self.viewModel.saveChanges()
+                        if self.viewModel.errorMessage == nil {
+                            self.dismiss()
                         }
                     }
-                    .disabled(!viewModel.canSave)
+                    .disabled(!self.viewModel.canSave)
                     .buttonStyle(.borderedProminent)
                 }
             }
@@ -64,12 +64,12 @@ struct EditHistorySheetView: View {
                         Text("案件")
                             .frame(width: 80, alignment: .leading)
 
-                        Picker("", selection: $viewModel.selectedProject) {
+                        Picker("", selection: self.$viewModel.selectedProject) {
                             Text("案件を選択")
                                 .foregroundColor(.secondary)
                                 .tag(nil as Project?)
 
-                            ForEach(viewModel.availableProjects, id: \.id) { project in
+                            ForEach(self.viewModel.availableProjects, id: \.id) { project in
                                 HStack {
                                     Circle()
                                         .fill(getProjectColor(from: project.color))
@@ -87,12 +87,12 @@ struct EditHistorySheetView: View {
                         Text("作業区分")
                             .frame(width: 80, alignment: .leading)
 
-                        Picker("", selection: $viewModel.selectedJob) {
+                        Picker("", selection: self.$viewModel.selectedJob) {
                             Text("作業区分を選択")
                                 .foregroundColor(.secondary)
                                 .tag(nil as Job?)
 
-                            ForEach(viewModel.availableJobs, id: \.id) { job in
+                            ForEach(self.viewModel.availableJobs, id: \.id) { job in
                                 Text(job.name)
                                     .tag(job as Job?)
                             }
@@ -110,18 +110,18 @@ struct EditHistorySheetView: View {
                         Text("開始時間")
                             .frame(width: 80, alignment: .leading)
 
-                        DatePicker("", selection: $viewModel.startTime, displayedComponents: [.date, .hourAndMinute])
+                        DatePicker("", selection: self.$viewModel.startTime, displayedComponents: [.date, .hourAndMinute])
                             .datePickerStyle(CompactDatePickerStyle())
 
                         VStack(spacing: 2) {
                             Button("+15分") {
-                                viewModel.adjustStartTime(by: 15)
+                                self.viewModel.adjustStartTime(by: 15)
                             }
                             .font(.caption2)
                             .buttonStyle(BorderedButtonStyle())
 
                             Button("-15分") {
-                                viewModel.adjustStartTime(by: -15)
+                                self.viewModel.adjustStartTime(by: -15)
                             }
                             .font(.caption2)
                             .buttonStyle(BorderedButtonStyle())
@@ -129,23 +129,23 @@ struct EditHistorySheetView: View {
                     }
 
                     // 終了時間（作業中の場合は編集不可）
-                    if viewModel.editingRecord?.endTime != nil {
+                    if self.viewModel.editingRecord?.endTime != nil {
                         HStack {
                             Text("終了時間")
                                 .frame(width: 80, alignment: .leading)
 
-                            DatePicker("", selection: $viewModel.endTime, displayedComponents: [.date, .hourAndMinute])
+                            DatePicker("", selection: self.$viewModel.endTime, displayedComponents: [.date, .hourAndMinute])
                                 .datePickerStyle(CompactDatePickerStyle())
 
                             VStack(spacing: 2) {
                                 Button("+15分") {
-                                    viewModel.adjustEndTime(by: 15)
+                                    self.viewModel.adjustEndTime(by: 15)
                                 }
                                 .font(.caption2)
                                 .buttonStyle(BorderedButtonStyle())
 
                                 Button("-15分") {
-                                    viewModel.adjustEndTime(by: -15)
+                                    self.viewModel.adjustEndTime(by: -15)
                                 }
                                 .font(.caption2)
                                 .buttonStyle(BorderedButtonStyle())
@@ -173,14 +173,14 @@ struct EditHistorySheetView: View {
                         Text("計算結果")
                             .frame(width: 80, alignment: .leading)
 
-                        Text(viewModel.formattedDuration)
+                        Text(self.viewModel.formattedDuration)
                             .font(.headline)
-                            .foregroundColor(viewModel.isValidTimeRange ? .primary : .red)
+                            .foregroundColor(self.viewModel.isValidTimeRange ? .primary : .red)
 
                         Spacer()
                     }
 
-                    if !viewModel.isValidTimeRange {
+                    if !self.viewModel.isValidTimeRange {
                         if let validationError = viewModel.validateTimeRange() {
                             Text(validationError)
                                 .font(.caption)
@@ -190,11 +190,11 @@ struct EditHistorySheetView: View {
                 }.padding(.top, 4)
             }
             .padding()
-            .alert("レコードを削除", isPresented: $viewModel.showingDeleteAlert) {
+            .alert("レコードを削除", isPresented: self.$viewModel.showingDeleteAlert) {
                 Button("キャンセル", role: .cancel) {}
                 Button("削除", role: .destructive) {
-                    viewModel.deleteRecord()
-                    dismiss()
+                    self.viewModel.deleteRecord()
+                    self.dismiss()
                 }
             } message: {
                 VStack(alignment: .leading, spacing: 4) {
@@ -206,19 +206,19 @@ struct EditHistorySheetView: View {
                     }
                 }
             }
-            .alert("エラー", isPresented: .constant(viewModel.errorMessage != nil)) {
+            .alert("エラー", isPresented: .constant(self.viewModel.errorMessage != nil)) {
                 Button("OK") {
-                    viewModel.clearError()
+                    self.viewModel.clearError()
                 }
             } message: {
-                Text(viewModel.errorMessage ?? "")
+                Text(self.viewModel.errorMessage ?? "")
             }
         }
         .frame(width: 500, height: 400)
         .fixedSize()
         .onDisappear {
-            if !viewModel.showingEditSheet {
-                viewModel.cancel()
+            if !self.viewModel.showingEditSheet {
+                self.viewModel.cancel()
             }
         }
     }

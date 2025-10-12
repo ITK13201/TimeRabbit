@@ -27,18 +27,18 @@ struct ContentView: View {
                         Text("現在の作業")
                             .font(.headline)
 
-                        if viewModel.isTracking() {
+                        if self.viewModel.isTracking() {
                             VStack(alignment: .center, spacing: 4) {
-                                Text(viewModel.getCurrentProjectName())
+                                Text(self.viewModel.getCurrentProjectName())
                                     .font(.title2)
-                                    .foregroundColor(getProjectColor(from: viewModel.getCurrentProjectColor()))
+                                    .foregroundColor(getProjectColor(from: self.viewModel.getCurrentProjectColor()))
                                     .lineLimit(1)
 
-                                Text("[作業区分: \(viewModel.getCurrentJobName())]")
+                                Text("[作業区分: \(self.viewModel.getCurrentJobName())]")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
 
-                                Text(formatDuration(viewModel.getCurrentDuration()))
+                                Text(formatDuration(self.viewModel.getCurrentDuration()))
                                     .font(.title)
                                     .fontWeight(.bold)
                                     .foregroundColor(.primary)
@@ -50,7 +50,7 @@ struct ContentView: View {
                                 }
 
                                 Button("停止") {
-                                    viewModel.stopTracking()
+                                    self.viewModel.stopTracking()
                                 }
                                 .buttonStyle(.borderedProminent)
                             }
@@ -79,16 +79,16 @@ struct ContentView: View {
                         Text("プロジェクト")
                             .font(.headline)
                         Spacer()
-                        Button(action: { viewModel.showAddProject() }) {
+                        Button(action: { self.viewModel.showAddProject() }) {
                             Image(systemName: "plus")
                         }
                     }
 
-                    if viewModel.projects.isEmpty {
+                    if self.viewModel.projects.isEmpty {
                         Text("プロジェクトがありません")
                             .foregroundColor(.secondary)
                     } else {
-                        ForEach(viewModel.projectRowViewModels, id: \.project.id) { projectRowViewModel in
+                        ForEach(self.viewModel.projectRowViewModels, id: \.project.id) { projectRowViewModel in
                             ProjectRowView(viewModel: projectRowViewModel)
                         }
                     }
@@ -100,15 +100,15 @@ struct ContentView: View {
             .frame(minWidth: 400)
         } detail: {
             // Main content
-            MainContentView(viewModel: viewModel.mainContentViewModel)
+            MainContentView(viewModel: self.viewModel.mainContentViewModel)
         }
         .navigationTitle("TimeRabbit")
-        .sheet(isPresented: $viewModel.showingAddProject) {
-            AddProjectSheetView(viewModel: viewModel.addProjectViewModel)
+        .sheet(isPresented: self.$viewModel.showingAddProject) {
+            AddProjectSheetView(viewModel: self.viewModel.addProjectViewModel)
         }
-        .alert("エラー", isPresented: .constant(viewModel.errorMessage != nil)) {
+        .alert("エラー", isPresented: .constant(self.viewModel.errorMessage != nil)) {
             Button("OK") {
-                viewModel.clearError()
+                self.viewModel.clearError()
             }
         } message: {
             if let error = viewModel.errorMessage {

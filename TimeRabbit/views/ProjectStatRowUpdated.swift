@@ -24,13 +24,13 @@ struct ProjectStatRowUpdated: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Circle()
-                    .fill(getProjectColor(from: projectColor))
+                    .fill(getProjectColor(from: self.projectColor))
                     .frame(width: 16, height: 16)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(projectName)
+                    Text(self.projectName)
                         .font(.headline)
-                    Text(jobName)
+                    Text(self.jobName)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -38,10 +38,10 @@ struct ProjectStatRowUpdated: View {
                 Spacer()
 
                 VStack(alignment: .trailing) {
-                    Text(formatDuration(duration))
+                    Text(formatDuration(self.duration))
                         .font(.title3)
                         .fontWeight(.semibold)
-                    Text("\(Int(round(percentage)))%")
+                    Text("\(Int(round(self.percentage)))%")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -50,24 +50,24 @@ struct ProjectStatRowUpdated: View {
                     Task {
                         let pasteboard = NSPasteboard.general
                         pasteboard.clearContents()
-                        pasteboard.setString(command, forType: .string)
+                        pasteboard.setString(self.command, forType: .string)
 
                         await MainActor.run {
-                            showCopiedFeedback = true
+                            self.showCopiedFeedback = true
                         }
 
                         try? await Task.sleep(nanoseconds: 2_000_000_000)
 
                         await MainActor.run {
-                            showCopiedFeedback = false
+                            self.showCopiedFeedback = false
                         }
                     }
                 }) {
                     HStack(spacing: 4) {
-                        Image(systemName: showCopiedFeedback ? "checkmark" : "doc.on.clipboard")
-                            .foregroundColor(showCopiedFeedback ? .green : .secondary)
+                        Image(systemName: self.showCopiedFeedback ? "checkmark" : "doc.on.clipboard")
+                            .foregroundColor(self.showCopiedFeedback ? .green : .secondary)
                             .font(.caption)
-                        if showCopiedFeedback {
+                        if self.showCopiedFeedback {
                             Text("完了")
                                 .font(.caption2)
                                 .foregroundColor(.green)
@@ -75,12 +75,12 @@ struct ProjectStatRowUpdated: View {
                     }
                 }
                 .buttonStyle(.borderless)
-                .help(showCopiedFeedback ? "コピーしました" : "コマンドをクリップボードにコピー")
-                .animation(.easeInOut(duration: 0.3), value: showCopiedFeedback)
+                .help(self.showCopiedFeedback ? "コピーしました" : "コマンドをクリップボードにコピー")
+                .animation(.easeInOut(duration: 0.3), value: self.showCopiedFeedback)
             }
 
-            ProgressView(value: percentage, total: 100)
-                .progressViewStyle(LinearProgressViewStyle(tint: getProjectColor(from: projectColor)))
+            ProgressView(value: self.percentage, total: 100)
+                .progressViewStyle(LinearProgressViewStyle(tint: getProjectColor(from: self.projectColor)))
         }
         .padding()
         .background(Color(nsColor: .controlBackgroundColor))

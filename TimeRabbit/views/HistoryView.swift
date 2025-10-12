@@ -27,22 +27,22 @@ struct HistoryView: View {
 
                 Spacer()
 
-                Button(action: { viewModel.toggleDatePicker() }) {
+                Button(action: { self.viewModel.toggleDatePicker() }) {
                     HStack {
                         Image(systemName: "calendar")
-                        Text(viewModel.getFormattedDate())
+                        Text(self.viewModel.getFormattedDate())
                     }
                 }
                 .popover(isPresented: Binding(
-                    get: { viewModel.showingDatePicker },
-                    set: { _ in viewModel.hideDatePicker() }
+                    get: { self.viewModel.showingDatePicker },
+                    set: { _ in self.viewModel.hideDatePicker() }
                 )) {
                     VStack {
                         DatePicker(
                             "日付を選択",
                             selection: Binding(
-                                get: { viewModel.selectedDate },
-                                set: { viewModel.selectedDate = $0 }
+                                get: { self.viewModel.selectedDate },
+                                set: { self.viewModel.selectedDate = $0 }
                             ),
                             displayedComponents: .date
                         )
@@ -50,27 +50,27 @@ struct HistoryView: View {
                         .padding()
 
                         Button("完了") {
-                            viewModel.hideDatePicker()
+                            self.viewModel.hideDatePicker()
                         }
                         .padding(.bottom)
                     }
                 }
             }
 
-            if !viewModel.hasRecords {
-                Text(viewModel.getEmptyMessage())
+            if !self.viewModel.hasRecords {
+                Text(self.viewModel.getEmptyMessage())
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
-                        Text("総作業時間: \(viewModel.getFormattedTotalTime())")
+                        Text("総作業時間: \(self.viewModel.getFormattedTotalTime())")
                             .font(.title2)
                             .fontWeight(.semibold)
 
                         Spacer()
 
-                        Text(viewModel.getRecordCountText())
+                        Text(self.viewModel.getRecordCountText())
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -87,26 +87,26 @@ struct HistoryView: View {
                                     HistoryRowView(
                                         record: inProgressRecord,
                                         onEdit: { record in
-                                            editHistoryViewModel.startEditing(record)
+                                            self.editHistoryViewModel.startEditing(record)
                                         },
                                         onDelete: { record in
-                                            editHistoryViewModel.startEditing(record)
-                                            editHistoryViewModel.showDeleteConfirmation()
+                                            self.editHistoryViewModel.startEditing(record)
+                                            self.editHistoryViewModel.showDeleteConfirmation()
                                         }
                                     )
                                 }
                             }
 
                             // 完了済みのレコード
-                            ForEach(viewModel.completedRecords, id: \.id) { record in
+                            ForEach(self.viewModel.completedRecords, id: \.id) { record in
                                 HistoryRowView(
                                     record: record,
                                     onEdit: { record in
-                                        editHistoryViewModel.startEditing(record)
+                                        self.editHistoryViewModel.startEditing(record)
                                     },
                                     onDelete: { record in
-                                        editHistoryViewModel.startEditing(record)
-                                        editHistoryViewModel.showDeleteConfirmation()
+                                        self.editHistoryViewModel.startEditing(record)
+                                        self.editHistoryViewModel.showDeleteConfirmation()
                                     }
                                 )
                             }
@@ -117,12 +117,12 @@ struct HistoryView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .sheet(isPresented: $editHistoryViewModel.showingEditSheet) {
-            EditHistorySheetView(viewModel: editHistoryViewModel)
+        .sheet(isPresented: self.$editHistoryViewModel.showingEditSheet) {
+            EditHistorySheetView(viewModel: self.editHistoryViewModel)
         }
-        .onChange(of: editHistoryViewModel.showingEditSheet) { isShowing in
+        .onChange(of: self.editHistoryViewModel.showingEditSheet) { isShowing in
             if !isShowing {
-                viewModel.refreshData()
+                self.viewModel.refreshData()
             }
         }
     }

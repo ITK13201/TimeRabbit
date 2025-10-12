@@ -24,11 +24,11 @@ struct AddProjectSheetView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("案件ID")
-                TextField("案件IDを入力", text: $viewModel.projectId)
+                TextField("案件IDを入力", text: self.$viewModel.projectId)
                     .textFieldStyle(.roundedBorder)
 
-                if !viewModel.idValidationMessage.isEmpty {
-                    Text(viewModel.idValidationMessage)
+                if !self.viewModel.idValidationMessage.isEmpty {
+                    Text(self.viewModel.idValidationMessage)
                         .font(.caption)
                         .foregroundColor(.red)
                 }
@@ -36,21 +36,21 @@ struct AddProjectSheetView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("案件名")
-                TextField("案件名を入力", text: $viewModel.projectName)
+                TextField("案件名を入力", text: self.$viewModel.projectName)
                     .textFieldStyle(.roundedBorder)
             }
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("色")
                 HStack {
-                    ForEach(viewModel.availableColors, id: \.self) { color in
-                        Button(action: { viewModel.selectColor(color) }) {
+                    ForEach(self.viewModel.availableColors, id: \.self) { color in
+                        Button(action: { self.viewModel.selectColor(color) }) {
                             Circle()
                                 .fill(getProjectColor(from: color))
                                 .frame(width: 24, height: 24)
                                 .overlay(
                                     Circle()
-                                        .stroke(viewModel.isColorSelected(color) ? Color.primary : Color.clear, lineWidth: 2)
+                                        .stroke(self.viewModel.isColorSelected(color) ? Color.primary : Color.clear, lineWidth: 2)
                                 )
                         }
                         .buttonStyle(.plain)
@@ -60,21 +60,21 @@ struct AddProjectSheetView: View {
 
             HStack {
                 Button("キャンセル") {
-                    viewModel.cancel()
+                    self.viewModel.cancel()
                 }
                 Spacer()
                 Button("作成") {
-                    viewModel.createProject()
+                    self.viewModel.createProject()
                 }
-                .disabled(!viewModel.isFormValid || !viewModel.isIdValid)
+                .disabled(!self.viewModel.isFormValid || !self.viewModel.isIdValid)
                 .buttonStyle(.borderedProminent)
             }
         }
         .padding()
         .frame(width: 300)
-        .alert("エラー", isPresented: .constant(viewModel.errorMessage != nil)) {
+        .alert("エラー", isPresented: .constant(self.viewModel.errorMessage != nil)) {
             Button("OK") {
-                viewModel.clearError()
+                self.viewModel.clearError()
             }
         } message: {
             if let error = viewModel.errorMessage {

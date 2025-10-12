@@ -15,7 +15,7 @@ class AddProjectViewModel: BaseViewModel {
 
     @Published var projectId = "" {
         didSet {
-            validateProjectId(projectId)
+            self.validateProjectId(self.projectId)
         }
     }
 
@@ -40,9 +40,9 @@ class AddProjectViewModel: BaseViewModel {
     // MARK: - Computed Properties
 
     var isFormValid: Bool {
-        let trimmedId = projectId.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedName = projectName.trimmingCharacters(in: .whitespacesAndNewlines)
-        return !trimmedId.isEmpty && !trimmedName.isEmpty && isIdValid
+        let trimmedId = self.projectId.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedName = self.projectName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmedId.isEmpty && !trimmedName.isEmpty && self.isIdValid
     }
 
     // MARK: - Initialization
@@ -55,14 +55,14 @@ class AddProjectViewModel: BaseViewModel {
     // MARK: - Actions
 
     func createProject() {
-        guard isFormValid else { return }
+        guard self.isFormValid else { return }
 
-        let trimmedId = projectId.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedName = projectName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedId = self.projectId.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedName = self.projectName.trimmingCharacters(in: .whitespacesAndNewlines)
 
         // 最終的なID重複チェック
         do {
-            guard try projectRepository.isProjectIdUnique(trimmedId, excluding: nil) else {
+            guard try self.projectRepository.isProjectIdUnique(trimmedId, excluding: nil) else {
                 handleError(ProjectError.duplicateId)
                 return
             }
@@ -75,35 +75,35 @@ class AddProjectViewModel: BaseViewModel {
             try projectRepository.createProject(projectId: trimmedId, name: trimmedName, color: selectedColor)
         }) {
             // フォームをリセット
-            resetForm()
+            self.resetForm()
 
             // コールバックを呼び出し
-            onProjectCreated?(newProject)
+            self.onProjectCreated?(newProject)
         }
     }
 
     func cancel() {
-        resetForm()
+        self.resetForm()
         clearError()
-        onCancel?()
+        self.onCancel?()
     }
 
     func resetForm() {
-        projectId = ""
-        projectName = ""
-        selectedColor = "blue"
-        idValidationMessage = ""
-        isIdValid = true
+        self.projectId = ""
+        self.projectName = ""
+        self.selectedColor = "blue"
+        self.idValidationMessage = ""
+        self.isIdValid = true
     }
 
     // MARK: - Color Management
 
     func selectColor(_ color: String) {
-        selectedColor = color
+        self.selectedColor = color
     }
 
     func isColorSelected(_ color: String) -> Bool {
-        return selectedColor == color
+        return self.selectedColor == color
     }
 
     // MARK: - ID Validation
@@ -113,23 +113,23 @@ class AddProjectViewModel: BaseViewModel {
 
         // 基本的なバリデーション
         guard !trimmedId.isEmpty else {
-            idValidationMessage = ""
-            isIdValid = true
+            self.idValidationMessage = ""
+            self.isIdValid = true
             return
         }
 
         // 文字数チェック（例: 3-20文字）
         guard trimmedId.count >= 3, trimmedId.count <= 20 else {
-            idValidationMessage = "案件IDは3〜20文字で入力してください"
-            isIdValid = false
+            self.idValidationMessage = "案件IDは3〜20文字で入力してください"
+            self.isIdValid = false
             return
         }
 
         // 文字種チェック（英数字とハイフンのみ）
         let allowedCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-"))
         guard trimmedId.unicodeScalars.allSatisfy({ allowedCharacters.contains($0) }) else {
-            idValidationMessage = "案件IDは英数字とハイフン(-)のみ使用できます"
-            isIdValid = false
+            self.idValidationMessage = "案件IDは英数字とハイフン(-)のみ使用できます"
+            self.isIdValid = false
             return
         }
 
@@ -137,15 +137,15 @@ class AddProjectViewModel: BaseViewModel {
         do {
             let isUnique = try projectRepository.isProjectIdUnique(trimmedId, excluding: nil)
             if !isUnique {
-                idValidationMessage = "この案件IDは既に使用されています"
-                isIdValid = false
+                self.idValidationMessage = "この案件IDは既に使用されています"
+                self.isIdValid = false
             } else {
-                idValidationMessage = ""
-                isIdValid = true
+                self.idValidationMessage = ""
+                self.isIdValid = true
             }
         } catch {
-            idValidationMessage = "ID確認中にエラーが発生しました"
-            isIdValid = false
+            self.idValidationMessage = "ID確認中にエラーが発生しました"
+            self.isIdValid = false
         }
     }
 }

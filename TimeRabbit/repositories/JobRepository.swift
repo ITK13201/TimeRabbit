@@ -50,13 +50,13 @@ class JobRepository: JobRepositoryProtocol, ObservableObject {
         for (jobId, name) in Job.predefinedJobs {
             if !existingJobIds.contains(jobId) {
                 let job = Job(jobId: jobId, name: name)
-                modelContext.insert(job)
+                self.modelContext.insert(job)
                 AppLogger.repository.debug("Created predefined job: \(jobId) - \(name)")
             }
         }
 
         do {
-            try modelContext.save()
+            try self.modelContext.save()
             AppLogger.repository.info("Successfully initialized predefined jobs")
         } catch let error as any Error {
             AppLogger.repository.error("Failed to save predefined jobs: \(error)")

@@ -17,15 +17,15 @@ struct MainContentView: View {
     }
 
     var body: some View {
-        TabView(selection: $viewModel.selectedTab) {
-            HistoryView(viewModel: viewModel.historyViewModel)
+        TabView(selection: self.$viewModel.selectedTab) {
+            HistoryView(viewModel: self.viewModel.historyViewModel)
                 .tabItem {
                     Image(systemName: MainContentViewModel.Tab.history.systemImageName)
                     Text(MainContentViewModel.Tab.history.title)
                 }
                 .tag(MainContentViewModel.Tab.history.rawValue)
 
-            StatisticsView(viewModel: viewModel.statisticsViewModel)
+            StatisticsView(viewModel: self.viewModel.statisticsViewModel)
                 .tabItem {
                     Image(systemName: MainContentViewModel.Tab.statistics.systemImageName)
                     Text(MainContentViewModel.Tab.statistics.title)
