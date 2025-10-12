@@ -37,36 +37,36 @@ class BaseViewModel: ObservableObject, BaseViewModelProtocol {
     // MARK: - Error Handling
 
     func handleError(_ error: Error) {
-        isLoading = false
-        errorMessage = error.localizedDescription
+        self.isLoading = false
+        self.errorMessage = error.localizedDescription
     }
 
     func clearError() {
-        errorMessage = nil
+        self.errorMessage = nil
     }
 
     // MARK: - Loading State Management
 
     func withLoading<T>(_ operation: @escaping () async throws -> T) async -> T? {
-        isLoading = true
+        self.isLoading = true
         defer { isLoading = false }
 
         do {
             return try await operation()
         } catch {
-            handleError(error)
+            self.handleError(error)
             return nil
         }
     }
 
     func withLoadingSync<T>(_ operation: () throws -> T) -> T? {
-        isLoading = true
+        self.isLoading = true
         defer { isLoading = false }
 
         do {
             return try operation()
         } catch {
-            handleError(error)
+            self.handleError(error)
             return nil
         }
     }

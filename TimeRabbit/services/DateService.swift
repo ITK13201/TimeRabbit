@@ -17,14 +17,14 @@ class DateService: ObservableObject {
     // MARK: - Date Picker Methods
 
     func toggleDatePicker() {
-        showingDatePicker.toggle()
+        self.showingDatePicker.toggle()
     }
 
     func hideDatePicker() {
-        showingDatePicker = false
+        self.showingDatePicker = false
     }
 
     func getFormattedDate() -> String {
-        return formatDate(selectedDate)
+        return formatDate(self.selectedDate)
     }
 }

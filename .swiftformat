@@ -1,0 +1,18 @@
+# SwiftFormat configuration file
+# https://github.com/nicklockwood/SwiftFormat
+
+# Version
+--swiftversion 5.0
+
+# Rules
+--enable isEmpty
+--enable sortImports
+
+# Self - insert self for member references to make capture semantics explicit
+--self insert
+--selfrequired project,selectedJob,availableJobs,isActive,onTrackingStarted,onProjectDeleted,onProjectUpdated
+
+# Excluded paths
+--exclude TimeRabbit.xcodeproj
+--exclude build
+--exclude .build

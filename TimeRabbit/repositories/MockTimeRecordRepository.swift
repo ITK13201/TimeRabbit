@@ -20,56 +20,56 @@ class MockTimeRecordRepository: TimeRecordRepositoryProtocol {
     init(projects: [Project], withSampleData: Bool = false) {
         self.projects = projects
         // 固定Jobを初期化
-        jobs = Job.predefinedJobs.map { Job(jobId: $0.0, name: $0.1) }
+        self.jobs = Job.predefinedJobs.map { Job(jobId: $0.0, name: $0.1) }
         if withSampleData {
-            setupSampleTimeRecords()
+            self.setupSampleTimeRecords()
         }
     }
 
     private func setupSampleTimeRecords() {
-        guard projects.count >= 3, jobs.count >= 3 else { return }
+        guard self.projects.count >= 3, self.jobs.count >= 3 else { return }
 
         let calendar = Calendar.current
         let today = Date()
         let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
 
         // 今日の記録
-        let record1 = TimeRecord(startTime: calendar.date(byAdding: .hour, value: -3, to: today)!, project: projects[0], job: jobs[0]) // 開発
+        let record1 = TimeRecord(startTime: calendar.date(byAdding: .hour, value: -3, to: today)!, project: self.projects[0], job: self.jobs[0]) // 開発
         record1.endTime = calendar.date(byAdding: .hour, value: -1, to: today)!
 
-        let record2 = TimeRecord(startTime: calendar.date(byAdding: .minute, value: -30, to: today)!, project: projects[1], job: jobs[1]) // 保守
+        let record2 = TimeRecord(startTime: calendar.date(byAdding: .minute, value: -30, to: today)!, project: self.projects[1], job: self.jobs[1]) // 保守
         record2.endTime = calendar.date(byAdding: .minute, value: -10, to: today)!
 
         // 昨日の記録
-        let record3 = TimeRecord(startTime: calendar.date(byAdding: .hour, value: -4, to: yesterday)!, project: projects[2], job: jobs[3]) // デザイン
+        let record3 = TimeRecord(startTime: calendar.date(byAdding: .hour, value: -4, to: yesterday)!, project: self.projects[2], job: self.jobs[3]) // デザイン
         record3.endTime = calendar.date(byAdding: .hour, value: -2, to: yesterday)!
 
         // 現在実行中の記録
-        let currentRecord = TimeRecord(startTime: calendar.date(byAdding: .minute, value: -5, to: today)!, project: projects[0], job: jobs[0])
+        let currentRecord = TimeRecord(startTime: calendar.date(byAdding: .minute, value: -5, to: today)!, project: self.projects[0], job: self.jobs[0])
         self.currentRecord = currentRecord
 
-        timeRecords = [record1, record2, record3, currentRecord]
+        self.timeRecords = [record1, record2, record3, currentRecord]
     }
 
     func startTimeRecord(for project: Project, job: Job) throws -> TimeRecord {
-        try stopCurrentTimeRecord()
+        try self.stopCurrentTimeRecord()
         let record = TimeRecord(startTime: Date(), project: project, job: job)
-        timeRecords.append(record)
-        currentRecord = record
+        self.timeRecords.append(record)
+        self.currentRecord = record
         return record
     }
 
     func stopCurrentTimeRecord() throws {
-        currentRecord?.endTime = Date()
-        currentRecord = nil
+        self.currentRecord?.endTime = Date()
+        self.currentRecord = nil
     }
 
     func fetchCurrentTimeRecord() throws -> TimeRecord? {
-        return currentRecord
+        return self.currentRecord
     }
 
     func fetchTimeRecords(for project: Project?, from startDate: Date, to endDate: Date) throws -> [TimeRecord] {
-        return timeRecords.filter { record in
+        return self.timeRecords.filter { record in
             let matchesProject = project == nil || record.backupProjectId == project?.projectId
             let inDateRange = record.startTime >= startDate && record.startTime <= endDate
             return matchesProject && inDateRange
@@ -77,14 +77,14 @@ class MockTimeRecordRepository: TimeRecordRepositoryProtocol {
     }
 
     func deleteTimeRecord(_ record: TimeRecord) throws {
-        timeRecords.removeAll { $0.id == record.id }
-        if currentRecord?.id == record.id {
-            currentRecord = nil
+        self.timeRecords.removeAll { $0.id == record.id }
+        if self.currentRecord?.id == record.id {
+            self.currentRecord = nil
         }
     }
 
     func updateTimeRecord(_ record: TimeRecord, startTime: Date, endTime: Date, project: Project, job: Job) throws {
-        guard try validateTimeRange(startTime: startTime, endTime: endTime, excludingRecord: record) else {
+        guard try self.validateTimeRange(startTime: startTime, endTime: endTime, excludingRecord: record) else {
             throw TimeRecordError.invalidTimeRange
         }
 
@@ -120,7 +120,7 @@ class MockTimeRecordRepository: TimeRecordRepositoryProtocol {
 
         // 重複チェック
         // 60秒以内の接触は許容し、完全に重複している場合のみエラーとする
-        let overlappingRecords = timeRecords.filter { record in
+        let overlappingRecords = self.timeRecords.filter { record in
             guard let recordEndTime = record.endTime else { return false }
 
             // 新しいレコードが既存レコードの後に続く場合（既存の終了時刻 <= 新規の開始時刻）

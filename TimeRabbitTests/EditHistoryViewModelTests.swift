@@ -40,7 +40,7 @@ struct EditHistoryViewModelTests {
 
     @Test("ViewModel should initialize correctly")
     func initialization() async {
-        let (viewModel, _, _, _, projects, _) = createTestSetup()
+        let (viewModel, _, _, _, projects, _) = self.createTestSetup()
 
         // Wait a moment for async initialization
         try! await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
@@ -58,7 +58,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should start editing completed record")
     func startEditingCompletedRecord() async {
-        let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
+        let (viewModel, _, _, _, _, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -78,7 +78,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should edit incomplete record (in-progress)")
     func startEditingIncompleteRecord() async {
-        let (viewModel, _, mockTimeRecordRepo, _, projects, _) = createTestSetup()
+        let (viewModel, _, mockTimeRecordRepo, _, projects, _) = self.createTestSetup()
 
         // Get default job for testing
         let mockJobRepo = MockJobRepository()
@@ -101,7 +101,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should validate valid time range")
     func validTimeRange() async {
-        let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
+        let (viewModel, _, _, _, _, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -120,7 +120,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should invalidate time range where start > end")
     func invalidTimeRangeStartAfterEnd() async {
-        let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
+        let (viewModel, _, _, _, _, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -139,7 +139,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should invalidate future time")
     func invalidFutureTime() async {
-        let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
+        let (viewModel, _, _, _, _, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -158,7 +158,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should invalidate too short duration")
     func invalidTooShortDuration() async {
-        let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
+        let (viewModel, _, _, _, _, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -179,7 +179,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should adjust start time correctly")
     func testAdjustStartTime() async {
-        let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
+        let (viewModel, _, _, _, _, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -197,7 +197,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should adjust end time correctly")
     func testAdjustEndTime() async {
-        let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
+        let (viewModel, _, _, _, _, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -217,7 +217,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should save valid changes")
     func saveValidChanges() async {
-        let (viewModel, _, _, _, projects, timeRecords) = createTestSetup()
+        let (viewModel, _, _, _, projects, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -240,7 +240,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should not save when missing required data")
     func saveWithMissingData() async {
-        let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
+        let (viewModel, _, _, _, _, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -260,7 +260,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should not save when missing job")
     func saveWithMissingJob() async {
-        let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
+        let (viewModel, _, _, _, _, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -419,7 +419,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should change job selection")
     func changeJobSelection() async {
-        let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
+        let (viewModel, _, _, _, _, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -441,7 +441,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should have all predefined jobs available")
     func predefinedJobsAvailable() async {
-        let (viewModel, _, _, _, _, _) = createTestSetup()
+        let (viewModel, _, _, _, _, _) = self.createTestSetup()
 
         #expect(viewModel.availableJobs.count == 5)
 
@@ -455,7 +455,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should delete record")
     func testDeleteRecord() async {
-        let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
+        let (viewModel, _, _, _, _, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -474,7 +474,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should not delete when no record selected")
     func deleteWithoutRecord() async {
-        let (viewModel, _, _, _, _, _) = createTestSetup()
+        let (viewModel, _, _, _, _, _) = self.createTestSetup()
 
         viewModel.deleteRecord()
 
@@ -485,7 +485,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should cancel editing")
     func testCancel() async {
-        let (viewModel, _, _, _, _, timeRecords) = createTestSetup()
+        let (viewModel, _, _, _, _, timeRecords) = self.createTestSetup()
 
         guard let recordToEdit = timeRecords.first else {
             #expect(Bool(false), "No completed records found for testing")
@@ -508,7 +508,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should format duration correctly")
     func testFormattedDuration() async {
-        let (viewModel, _, _, _, _, _) = createTestSetup()
+        let (viewModel, _, _, _, _, _) = self.createTestSetup()
 
         // Test hours and minutes
         viewModel.startTime = Date()
@@ -527,7 +527,7 @@ struct EditHistoryViewModelTests {
 
     @Test("Should manage loading state correctly")
     func loadingState() async {
-        let (viewModel, _, _, _, _, _) = createTestSetup()
+        let (viewModel, _, _, _, _, _) = self.createTestSetup()
 
         #expect(viewModel.isLoading == false)
 

@@ -28,15 +28,15 @@ class EditHistoryViewModel: BaseViewModel {
     // MARK: - Computed Properties
 
     var isValidTimeRange: Bool {
-        guard startTime < endTime else { return false }
-        guard endTime <= Date() else { return false }
+        guard self.startTime < self.endTime else { return false }
+        guard self.endTime <= Date() else { return false }
 
-        let duration = endTime.timeIntervalSince(startTime)
+        let duration = self.endTime.timeIntervalSince(self.startTime)
         return duration >= 60 && duration <= 86400
     }
 
     var calculatedDuration: TimeInterval {
-        return endTime.timeIntervalSince(startTime)
+        return self.endTime.timeIntervalSince(self.startTime)
     }
 
     var formattedDuration: String {
@@ -52,11 +52,11 @@ class EditHistoryViewModel: BaseViewModel {
     }
 
     var canSave: Bool {
-        return selectedProject != nil && selectedJob != nil && isValidTimeRange && !isLoading
+        return self.selectedProject != nil && self.selectedJob != nil && self.isValidTimeRange && !isLoading
     }
 
     var canDelete: Bool {
-        return editingRecord != nil && !isLoading
+        return self.editingRecord != nil && !isLoading
     }
 
     // MARK: - Dependencies
@@ -75,24 +75,24 @@ class EditHistoryViewModel: BaseViewModel {
         self.projectRepository = projectRepository
         self.jobRepository = jobRepository
         super.init()
-        loadAvailableProjects()
-        loadAvailableJobs()
+        self.loadAvailableProjects()
+        self.loadAvailableJobs()
     }
 
     // MARK: - Actions
 
     func startEditing(_ record: TimeRecord) {
-        editingRecord = record
-        selectedProject = record.project
-        selectedJob = record.job
-        startTime = record.startTime
-        endTime = record.endTime ?? Date()
-        showingEditSheet = true
+        self.editingRecord = record
+        self.selectedProject = record.project
+        self.selectedJob = record.job
+        self.startTime = record.startTime
+        self.endTime = record.endTime ?? Date()
+        self.showingEditSheet = true
         clearError()
 
         // 編集開始時に最新のプロジェクト・作業区分一覧を再読み込み
-        loadAvailableProjects()
-        loadAvailableJobs()
+        self.loadAvailableProjects()
+        self.loadAvailableJobs()
     }
 
     func saveChanges() {
@@ -105,18 +105,18 @@ class EditHistoryViewModel: BaseViewModel {
         }
 
         withLoadingSync {
-            try timeRecordRepository.updateTimeRecord(
+            try self.timeRecordRepository.updateTimeRecord(
                 record,
-                startTime: startTime,
-                endTime: endTime,
+                startTime: self.startTime,
+                endTime: self.endTime,
                 project: project,
                 job: job
             )
         }
 
         if errorMessage == nil {
-            showingEditSheet = false
-            resetEditingState()
+            self.showingEditSheet = false
+            self.resetEditingState()
         }
     }
 
@@ -127,40 +127,40 @@ class EditHistoryViewModel: BaseViewModel {
         }
 
         withLoadingSync {
-            try timeRecordRepository.deleteTimeRecord(record)
+            try self.timeRecordRepository.deleteTimeRecord(record)
         }
 
         if errorMessage == nil {
-            showingDeleteAlert = false
-            showingEditSheet = false
-            resetEditingState()
+            self.showingDeleteAlert = false
+            self.showingEditSheet = false
+            self.resetEditingState()
         }
     }
 
     func cancel() {
-        showingEditSheet = false
-        showingDeleteAlert = false
-        resetEditingState()
+        self.showingEditSheet = false
+        self.showingDeleteAlert = false
+        self.resetEditingState()
         clearError()
     }
 
     func showDeleteConfirmation() {
-        showingDeleteAlert = true
+        self.showingDeleteAlert = true
     }
 
     // MARK: - Time Adjustment Methods
 
     func adjustStartTime(by minutes: Int) {
         guard let newStartTime = Calendar.current.date(byAdding: .minute, value: minutes, to: startTime) else { return }
-        if newStartTime < endTime, newStartTime <= Date() {
-            startTime = newStartTime
+        if newStartTime < self.endTime, newStartTime <= Date() {
+            self.startTime = newStartTime
         }
     }
 
     func adjustEndTime(by minutes: Int) {
         guard let newEndTime = Calendar.current.date(byAdding: .minute, value: minutes, to: endTime) else { return }
-        if newEndTime > startTime, newEndTime <= Date() {
-            endTime = newEndTime
+        if newEndTime > self.startTime, newEndTime <= Date() {
+            self.endTime = newEndTime
         }
     }
 
@@ -170,7 +170,7 @@ class EditHistoryViewModel: BaseViewModel {
         if let projects = withLoadingSync({
             try projectRepository.fetchProjects()
         }) {
-            availableProjects = projects
+            self.availableProjects = projects
         }
     }
 
@@ -178,18 +178,18 @@ class EditHistoryViewModel: BaseViewModel {
         if let jobs = withLoadingSync({
             try jobRepository.fetchAllJobs()
         }) {
-            availableJobs = jobs
+            self.availableJobs = jobs
         }
     }
 
     private func resetEditingState() {
-        editingRecord = nil
-        selectedProject = nil
-        selectedJob = nil
-        startTime = Date()
-        endTime = Date()
-        availableProjects = []
-        availableJobs = []
+        self.editingRecord = nil
+        self.selectedProject = nil
+        self.selectedJob = nil
+        self.startTime = Date()
+        self.endTime = Date()
+        self.availableProjects = []
+        self.availableJobs = []
     }
 
     // MARK: - Validation
@@ -197,9 +197,9 @@ class EditHistoryViewModel: BaseViewModel {
     func validateTimeRange() -> String? {
         do {
             guard let record = editingRecord else { return nil }
-            _ = try timeRecordRepository.validateTimeRange(
-                startTime: startTime,
-                endTime: endTime,
+            _ = try self.timeRecordRepository.validateTimeRange(
+                startTime: self.startTime,
+                endTime: self.endTime,
                 excludingRecord: record
             )
             return nil

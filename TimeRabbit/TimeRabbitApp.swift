@@ -20,7 +20,7 @@ struct TimeRabbitApp: App {
                 TimeRecord.self,
             ])
             let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-            modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            self.modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
             AppLogger.app.critical("Failed to create ModelContainer: \(error)")
 
@@ -35,7 +35,7 @@ struct TimeRabbitApp: App {
                         TimeRecord.self,
                     ])
                     let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-                    modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+                    self.modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
                     AppLogger.app.info("Database reset successful")
                 } catch {
                     AppLogger.app.critical("Failed to reset database: \(error)")
@@ -76,7 +76,7 @@ struct TimeRabbitApp: App {
             let viewModelFactory = ViewModelFactory.create(with: (projectRepository, timeRecordRepository, jobRepository))
             ContentView(viewModelFactory: viewModelFactory)
         }
-        .modelContainer(modelContainer)
+        .modelContainer(self.modelContainer)
         .defaultSize(width: 1000, height: 700)
     }
 }

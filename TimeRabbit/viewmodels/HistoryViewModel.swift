@@ -30,27 +30,27 @@ class HistoryViewModel: BaseViewModel {
     // MARK: - Computed Properties
 
     var completedRecords: [TimeRecord] {
-        return dayRecords.filter { $0.endTime != nil }
+        return self.dayRecords.filter { $0.endTime != nil }
     }
 
     var allRecords: [TimeRecord] {
-        return dayRecords // 完了済みと作業中の両方を含む
+        return self.dayRecords // 完了済みと作業中の両方を含む
     }
 
     var inProgressRecord: TimeRecord? {
-        return dayRecords.first { $0.endTime == nil }
+        return self.dayRecords.first { $0.endTime == nil }
     }
 
     var totalDayTime: TimeInterval {
-        return completedRecords.reduce(0) { $0 + $1.duration }
+        return self.completedRecords.reduce(0) { $0 + $1.duration }
     }
 
     var hasRecords: Bool {
-        return !dayRecords.isEmpty
+        return !self.dayRecords.isEmpty
     }
 
     var recordCount: Int {
-        return dayRecords.count
+        return self.dayRecords.count
     }
 
     // MARK: - Initialization
@@ -66,32 +66,32 @@ class HistoryViewModel: BaseViewModel {
         self.dateService = dateService
         super.init()
 
-        setupDateObserver()
-        loadRecordsForSelectedDate()
-        setupEditHistoryObservation()
+        self.setupDateObserver()
+        self.loadRecordsForSelectedDate()
+        self.setupEditHistoryObservation()
     }
 
     private func setupDateObserver() {
-        dateService.$selectedDate
+        self.dateService.$selectedDate
             .sink { [weak self] _ in
                 self?.loadRecordsForSelectedDate()
             }
-            .store(in: &cancellables)
+            .store(in: &self.cancellables)
 
-        dateService.$showingDatePicker
+        self.dateService.$showingDatePicker
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 DispatchQueue.main.async {
                     self?.objectWillChange.send()
                 }
             }
-            .store(in: &cancellables)
+            .store(in: &self.cancellables)
     }
 
     // MARK: - Data Loading
 
     private func loadRecordsForSelectedDate() {
-        loadRecordsForDate(dateService.selectedDate)
+        self.loadRecordsForDate(self.dateService.selectedDate)
     }
 
     func loadRecordsForDate(_ date: Date) {
@@ -101,62 +101,62 @@ class HistoryViewModel: BaseViewModel {
         if let records = withLoadingSync({
             try timeRecordRepository.fetchTimeRecords(for: nil, from: startOfDay, to: endOfDay)
         }) {
-            dayRecords = records
+            self.dayRecords = records
         }
     }
 
     func refreshData() {
-        loadRecordsForSelectedDate()
+        self.loadRecordsForSelectedDate()
     }
 
     // MARK: - Date Management
 
     func selectDate(_ date: Date) {
-        dateService.selectedDate = date
-        dateService.hideDatePicker()
+        self.dateService.selectedDate = date
+        self.dateService.hideDatePicker()
     }
 
     func toggleDatePicker() {
-        dateService.toggleDatePicker()
+        self.dateService.toggleDatePicker()
     }
 
     func hideDatePicker() {
-        dateService.hideDatePicker()
+        self.dateService.hideDatePicker()
     }
 
     func getFormattedDate() -> String {
-        return dateService.getFormattedDate()
+        return self.dateService.getFormattedDate()
     }
 
     func getEmptyMessage() -> String {
-        return isToday(dateService.selectedDate) ? "今日はまだ作業記録がありません" : "この日の作業記録はありません"
+        return self.isToday(self.dateService.selectedDate) ? "今日はまだ作業記録がありません" : "この日の作業記録はありません"
     }
 
     var showingDatePicker: Bool {
-        return dateService.showingDatePicker
+        return self.dateService.showingDatePicker
     }
 
     var selectedDate: Date {
-        get { dateService.selectedDate }
-        set { dateService.selectedDate = newValue }
+        get { self.dateService.selectedDate }
+        set { self.dateService.selectedDate = newValue }
     }
 
     // MARK: - Record Management
 
     func deleteRecord(_ record: TimeRecord) {
         withLoadingSync {
-            try timeRecordRepository.deleteTimeRecord(record)
+            try self.timeRecordRepository.deleteTimeRecord(record)
         }
 
         if errorMessage == nil {
             // データを再読み込み
-            loadRecordsForSelectedDate()
+            self.loadRecordsForSelectedDate()
         }
     }
 
     private func setupEditHistoryObservation() {
         // EditHistoryViewModelが編集や削除を完了したらデータをリフレッシュ
-        editHistoryViewModel.$showingEditSheet
+        self.editHistoryViewModel.$showingEditSheet
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isShowing in
                 if !isShowing {
@@ -164,7 +164,7 @@ class HistoryViewModel: BaseViewModel {
                     self?.refreshData()
                 }
             }
-            .store(in: &cancellables)
+            .store(in: &self.cancellables)
     }
 
     // MARK: - Helper Methods
@@ -174,10 +174,10 @@ class HistoryViewModel: BaseViewModel {
     }
 
     func getFormattedTotalTime() -> String {
-        return formatDuration(totalDayTime)
+        return formatDuration(self.totalDayTime)
     }
 
     func getRecordCountText() -> String {
-        return "\(recordCount)件の記録"
+        return "\(self.recordCount)件の記録"
     }
 }

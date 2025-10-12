@@ -27,22 +27,22 @@ struct StatisticsView: View {
 
                 Spacer()
 
-                Button(action: { viewModel.toggleDatePicker() }) {
+                Button(action: { self.viewModel.toggleDatePicker() }) {
                     HStack {
                         Image(systemName: "calendar")
-                        Text(viewModel.getFormattedDate())
+                        Text(self.viewModel.getFormattedDate())
                     }
                 }
                 .popover(isPresented: Binding(
-                    get: { viewModel.showingDatePicker },
-                    set: { _ in viewModel.hideDatePicker() }
+                    get: { self.viewModel.showingDatePicker },
+                    set: { _ in self.viewModel.hideDatePicker() }
                 )) {
                     VStack {
                         DatePicker(
                             "日付を選択",
                             selection: Binding(
-                                get: { viewModel.selectedDate },
-                                set: { viewModel.selectedDate = $0 }
+                                get: { self.viewModel.selectedDate },
+                                set: { self.viewModel.selectedDate = $0 }
                             ),
                             displayedComponents: .date
                         )
@@ -50,28 +50,28 @@ struct StatisticsView: View {
                         .padding()
 
                         Button("完了") {
-                            viewModel.hideDatePicker()
+                            self.viewModel.hideDatePicker()
                         }
                         .padding(.bottom)
                     }
                 }
             }
 
-            if !viewModel.hasData {
-                Text(viewModel.getEmptyMessage())
+            if !self.viewModel.hasData {
+                Text(self.viewModel.getEmptyMessage())
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("総作業時間: \(viewModel.getFormattedTotalTime())")
+                    Text("総作業時間: \(self.viewModel.getFormattedTotalTime())")
                         .font(.title2)
                         .fontWeight(.semibold)
 
                     ScrollView {
                         LazyVStack(spacing: 8) {
-                            ForEach(Array(viewModel.projectJobDetails.enumerated()), id: \.offset) { _, detail in
-                                let percentage = viewModel.getPercentage(for: detail.duration)
-                                let command = viewModel.generateCommand(for: detail)
+                            ForEach(Array(self.viewModel.projectJobDetails.enumerated()), id: \.offset) { _, detail in
+                                let percentage = self.viewModel.getPercentage(for: detail.duration)
+                                let command = self.viewModel.generateCommand(for: detail)
 
                                 ProjectStatRowUpdated(
                                     projectName: detail.projectName,
@@ -91,28 +91,28 @@ struct StatisticsView: View {
                                     Button(action: {
                                         // コピー操作を非同期で実行
                                         Task {
-                                            let text = viewModel.generateStatisticsText()
+                                            let text = self.viewModel.generateStatisticsText()
                                             let pasteboard = NSPasteboard.general
                                             pasteboard.clearContents()
                                             pasteboard.setString(text, forType: .string)
 
                                             // フィードバック表示をメインスレッドで実行
                                             await MainActor.run {
-                                                showCopiedFeedback = true
+                                                self.showCopiedFeedback = true
                                             }
 
                                             // 2秒後にリセット
                                             try? await Task.sleep(nanoseconds: 2_000_000_000)
 
                                             await MainActor.run {
-                                                showCopiedFeedback = false
+                                                self.showCopiedFeedback = false
                                             }
                                         }
                                     }) {
                                         HStack(spacing: 4) {
-                                            Image(systemName: showCopiedFeedback ? "checkmark" : "doc.on.clipboard")
-                                                .foregroundColor(showCopiedFeedback ? .green : .primary)
-                                            if showCopiedFeedback {
+                                            Image(systemName: self.showCopiedFeedback ? "checkmark" : "doc.on.clipboard")
+                                                .foregroundColor(self.showCopiedFeedback ? .green : .primary)
+                                            if self.showCopiedFeedback {
                                                 Text("コピー完了")
                                                     .font(.caption)
                                                     .foregroundColor(.green)
@@ -120,13 +120,13 @@ struct StatisticsView: View {
                                         }
                                     }
                                     .buttonStyle(.borderless)
-                                    .help(showCopiedFeedback ? "コピーしました" : "統計データをクリップボードにコピー")
-                                    .animation(.easeInOut(duration: 0.3), value: showCopiedFeedback)
+                                    .help(self.showCopiedFeedback ? "コピーしました" : "統計データをクリップボードにコピー")
+                                    .animation(.easeInOut(duration: 0.3), value: self.showCopiedFeedback)
                                 }
 
                                 ScrollView {
                                     VStack(alignment: .leading) {
-                                        Text(viewModel.generateStatisticsText())
+                                        Text(self.viewModel.generateStatisticsText())
                                             .font(.system(.caption, design: .monospaced))
                                             .textSelection(.enabled)
                                             .frame(maxWidth: .infinity, alignment: .leading)

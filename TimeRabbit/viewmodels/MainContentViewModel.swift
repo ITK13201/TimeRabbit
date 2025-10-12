@@ -44,7 +44,7 @@ class MainContentViewModel: BaseViewModel {
     // MARK: - Computed Properties
 
     var currentTab: Tab {
-        return Tab(rawValue: selectedTab) ?? .history
+        return Tab(rawValue: self.selectedTab) ?? .history
     }
 
     // MARK: - Initialization
@@ -53,7 +53,7 @@ class MainContentViewModel: BaseViewModel {
         self.statisticsViewModel = statisticsViewModel
         self.historyViewModel = historyViewModel
         super.init()
-        setupEditHistoryObservation()
+        self.setupEditHistoryObservation()
     }
 
     // MARK: - Observation Setup
@@ -62,7 +62,7 @@ class MainContentViewModel: BaseViewModel {
 
     private func setupEditHistoryObservation() {
         // EditHistoryViewModelのシート状態を監視して、編集完了時に統計を更新
-        historyViewModel.editHistoryViewModel.$showingEditSheet
+        self.historyViewModel.editHistoryViewModel.$showingEditSheet
             .receive(on: DispatchQueue.main)
             .sink { [weak self] isShowing in
                 if !isShowing {
@@ -70,36 +70,36 @@ class MainContentViewModel: BaseViewModel {
                     self?.statisticsViewModel.refreshData()
                 }
             }
-            .store(in: &cancellables)
+            .store(in: &self.cancellables)
     }
 
     // MARK: - Tab Management
 
     func selectTab(_ tab: Tab) {
-        selectedTab = tab.rawValue
+        self.selectedTab = tab.rawValue
 
         // タブ切り替え時にデータを更新
-        refreshCurrentTabData()
+        self.refreshCurrentTabData()
     }
 
     func selectTab(at index: Int) {
         guard let tab = Tab(rawValue: index) else { return }
-        selectTab(tab)
+        self.selectTab(tab)
     }
 
     // MARK: - Data Management
 
     func refreshCurrentTabData() {
-        switch currentTab {
+        switch self.currentTab {
         case .history:
-            historyViewModel.refreshData()
+            self.historyViewModel.refreshData()
         case .statistics:
-            statisticsViewModel.refreshData()
+            self.statisticsViewModel.refreshData()
         }
     }
 
     func refreshAllData() {
-        historyViewModel.refreshData()
-        statisticsViewModel.refreshData()
+        self.historyViewModel.refreshData()
+        self.statisticsViewModel.refreshData()
     }
 }
