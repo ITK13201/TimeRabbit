@@ -59,7 +59,8 @@ swiftformat --lint . --exclude TimeRabbit.xcodeproj,build,.build
 
 **Formatting Notes:**
 - **IMPORTANT**: Always run `swiftformat .` before pushing code
-- Pre-push hook automatically checks formatting and blocks push if unformatted
+- Pre-push hook automatically checks formatting and runs tests before push
+- Push is blocked if code is unformatted or tests fail
 - CI workflow includes SwiftFormat check job that must pass before tests run
 - Uses SwiftFormat 0.58.3+
 
@@ -85,6 +86,7 @@ xcodebuild test -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'p
 - UITests in `TimeRabbitUITests/` are excluded (too slow, ~minutes vs ~0.1 seconds)
 - Test data must use **past dates** to avoid `futureTime` validation errors
 - Mock repositories with `withSampleData: false` allow explicit test data creation
+- **Pre-push hook automatically runs tests** before push (push blocked if tests fail)
 
 ### Git Commit Convention
 
