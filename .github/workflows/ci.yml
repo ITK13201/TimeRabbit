@@ -17,9 +17,31 @@ on:
       - '.github/workflows/ci.yml'
 
 jobs:
+  format-check:
+    name: Check SwiftFormat
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install SwiftFormat
+        run: brew install swiftformat
+
+      - name: Check SwiftFormat
+        run: |
+          echo "Checking SwiftFormat compliance..."
+          swiftformat --lint . --exclude TimeRabbit.xcodeproj,build,.build
+          if [ $? -ne 0 ]; then
+            echo "❌ SwiftFormat check failed. Please run 'swiftformat .' locally and commit the changes."
+            exit 1
+          fi
+          echo "✅ SwiftFormat check passed!"
+
   test:
     name: Run Tests
     runs-on: macos-15
+    needs: format-check
 
     steps:
       - name: Checkout code

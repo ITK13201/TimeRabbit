@@ -45,6 +45,24 @@ xcodebuild -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'platfo
 open TimeRabbit.xcodeproj
 ```
 
+### Code Formatting
+
+**Format all Swift files:**
+```bash
+swiftformat . --exclude TimeRabbit.xcodeproj,build,.build
+```
+
+**Check formatting without modifying files:**
+```bash
+swiftformat --lint . --exclude TimeRabbit.xcodeproj,build,.build
+```
+
+**Formatting Notes:**
+- **IMPORTANT**: Always run `swiftformat .` before pushing code
+- Pre-push hook automatically checks formatting and blocks push if unformatted
+- CI workflow includes SwiftFormat check job that must pass before tests run
+- Uses SwiftFormat 0.58.3+
+
 ### Testing
 
 **Run all unit tests (UITests excluded):**
@@ -70,7 +88,7 @@ xcodebuild test -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'p
 
 ### Git Commit Convention
 
-Format: `#[issue_number] [type]: [message]`
+Format: `#[issue_number] [type]: [message]` (omit `#[issue_number]` if no related issue)
 
 **Types:** `feature`, `bugfix`, `hotfix`, `docs`, `refactor`, `test`, `chore`
 
@@ -79,7 +97,13 @@ Format: `#[issue_number] [type]: [message]`
 #2 feature: Unify identifier naming with UUID-based id for all models
 #15 bugfix: Fix time overlap validation logic
 #8 docs: Update architecture documentation
+refactor: Apply SwiftFormat to all files
+chore: Update dependencies
 ```
+
+**Important:**
+- Use `#[issue_number]` prefix ONLY when there is a related issue
+- Do NOT use `#0` for commits without an issue
 
 ### Release Procedure
 
@@ -142,7 +166,9 @@ See [docs/operations/release-procedure.md](docs/operations/release-procedure.md)
 
 9. **Job Selection**: Always include both Project and Job when starting time records
 
-10. **Testing**: Execute unit tests when doing development validation
+10. **Code Formatting**: Always run `swiftformat .` before pushing code
+
+11. **Testing**: Execute unit tests when doing development validation
 
 ### Adding New Features
 
@@ -236,7 +262,9 @@ Full documentation index: [docs/README.md](docs/README.md)
 
 ## CI/CD
 
-- **CI** (`ci.yml`): Tests on PR/main push (macOS 15, Xcode 16.4)
+- **CI** (`ci.yml`): Format check and tests on PR/main push (macOS 15, Xcode 16.4)
+  - `format-check` job: Validates SwiftFormat compliance (blocks if unformatted)
+  - `test` job: Runs unit tests (requires format-check to pass)
 - **Release** (`release.yml`): Two-stage workflow triggered by `v*.*.*` tags
   - Test → Build → Package (ZIP, DMG, SHA256)
   - Auto-publishes to GitHub Releases

@@ -5,216 +5,217 @@
 //  Created by Takumi Ikeda on 2025/08/09.
 //
 
+import Combine
 import Foundation
 import SwiftUI
-import Combine
 
 @MainActor
 class ContentViewModel: BaseViewModel {
-  // MARK: - Published Properties
-  
-  @Published var projects: [Project] = []
-  @Published var currentTimeRecord: TimeRecord?
-  @Published var showingAddProject = false
-  
-  // MARK: - Child ViewModels
-  
-  let mainContentViewModel: MainContentViewModel
-  let addProjectViewModel: AddProjectViewModel
-  
-  // MARK: - Dependencies
-  
-  private let projectRepository: ProjectRepositoryProtocol
-  private let timeRecordRepository: TimeRecordRepositoryProtocol
-  private let jobRepository: JobRepositoryProtocol
-  
-  // MARK: - Project Row ViewModels
-  
-  @Published var projectRowViewModels: [ProjectRowViewModel] = []
-  
-  // MARK: - Timer for real-time updates
-  
-  private var timer: Timer?
-  
-  // MARK: - Initialization
-  
-  init(projectRepository: ProjectRepositoryProtocol,
-       timeRecordRepository: TimeRecordRepositoryProtocol,
-       jobRepository: JobRepositoryProtocol,
-       mainContentViewModel: MainContentViewModel,
-       addProjectViewModel: AddProjectViewModel) {
-    self.projectRepository = projectRepository
-    self.timeRecordRepository = timeRecordRepository
-    self.jobRepository = jobRepository
-    self.mainContentViewModel = mainContentViewModel
-    self.addProjectViewModel = addProjectViewModel
-    
-    super.init()
-    
-    setupAddProjectCallbacks()
-    startTimer()
-    initializeJobsIfNeeded()
-    loadData()
-  }
-  
-  deinit {
-    timer?.invalidate()
-  }
-  
-  // MARK: - Setup
-  
-  private func setupAddProjectCallbacks() {
-    addProjectViewModel.onProjectCreated = { [weak self] newProject in
-      self?.handleProjectCreated(newProject)
+    // MARK: - Published Properties
+
+    @Published var projects: [Project] = []
+    @Published var currentTimeRecord: TimeRecord?
+    @Published var showingAddProject = false
+
+    // MARK: - Child ViewModels
+
+    let mainContentViewModel: MainContentViewModel
+    let addProjectViewModel: AddProjectViewModel
+
+    // MARK: - Dependencies
+
+    private let projectRepository: ProjectRepositoryProtocol
+    private let timeRecordRepository: TimeRecordRepositoryProtocol
+    private let jobRepository: JobRepositoryProtocol
+
+    // MARK: - Project Row ViewModels
+
+    @Published var projectRowViewModels: [ProjectRowViewModel] = []
+
+    // MARK: - Timer for real-time updates
+
+    private var timer: Timer?
+
+    // MARK: - Initialization
+
+    init(projectRepository: ProjectRepositoryProtocol,
+         timeRecordRepository: TimeRecordRepositoryProtocol,
+         jobRepository: JobRepositoryProtocol,
+         mainContentViewModel: MainContentViewModel,
+         addProjectViewModel: AddProjectViewModel)
+    {
+        self.projectRepository = projectRepository
+        self.timeRecordRepository = timeRecordRepository
+        self.jobRepository = jobRepository
+        self.mainContentViewModel = mainContentViewModel
+        self.addProjectViewModel = addProjectViewModel
+
+        super.init()
+
+        setupAddProjectCallbacks()
+        startTimer()
+        initializeJobsIfNeeded()
+        loadData()
     }
-    
-    addProjectViewModel.onCancel = { [weak self] in
-      self?.hideAddProject()
+
+    deinit {
+        timer?.invalidate()
     }
-  }
-  
-  private func startTimer() {
-    timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-      Task { @MainActor in
-        // リアルタイム更新のために objectWillChange を発行
-        self.objectWillChange.send()
-        
-        // プロジェクト行のアクティブ状態を更新
-        self.updateProjectRowActiveStates()
-      }
+
+    // MARK: - Setup
+
+    private func setupAddProjectCallbacks() {
+        addProjectViewModel.onProjectCreated = { [weak self] newProject in
+            self?.handleProjectCreated(newProject)
+        }
+
+        addProjectViewModel.onCancel = { [weak self] in
+            self?.hideAddProject()
+        }
     }
-  }
-  
-  // MARK: - Data Loading
-  
-  func loadData() {
-    if let fetchedProjects = withLoadingSync({
-      try projectRepository.fetchProjects()
-    }) {
-      projects = fetchedProjects
+
+    private func startTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            Task { @MainActor in
+                // リアルタイム更新のために objectWillChange を発行
+                self.objectWillChange.send()
+
+                // プロジェクト行のアクティブ状態を更新
+                self.updateProjectRowActiveStates()
+            }
+        }
     }
-    
-    if let currentRecord = withLoadingSync({
-      try timeRecordRepository.fetchCurrentTimeRecord()
-    }) {
-      currentTimeRecord = currentRecord
+
+    // MARK: - Data Loading
+
+    func loadData() {
+        if let fetchedProjects = withLoadingSync({
+            try projectRepository.fetchProjects()
+        }) {
+            projects = fetchedProjects
+        }
+
+        if let currentRecord = withLoadingSync({
+            try timeRecordRepository.fetchCurrentTimeRecord()
+        }) {
+            currentTimeRecord = currentRecord
+        }
+
+        if errorMessage == nil {
+            // プロジェクト行のViewModelを更新
+            updateProjectRowViewModels()
+
+            // メインコンテンツのデータも更新
+            mainContentViewModel.refreshAllData()
+        }
     }
-    
-    if errorMessage == nil {
-      // プロジェクト行のViewModelを更新
-      updateProjectRowViewModels()
-      
-      // メインコンテンツのデータも更新
-      mainContentViewModel.refreshAllData()
+
+    func initializeJobsIfNeeded() {
+        withLoadingSync {
+            try jobRepository.initializePredefinedJobs()
+        }
     }
-  }
-  
-  func initializeJobsIfNeeded() {
-    withLoadingSync {
-      try jobRepository.initializePredefinedJobs()
+
+    private func updateProjectRowViewModels() {
+        projectRowViewModels = projects.map { project in
+            let viewModel = ProjectRowViewModel(
+                project: project,
+                projectRepository: projectRepository,
+                timeRecordRepository: timeRecordRepository,
+                jobRepository: jobRepository
+            )
+
+            // コールバックを設定
+            viewModel.onProjectDeleted = { [weak self] deletedProject in
+                self?.handleProjectDeleted(deletedProject)
+            }
+
+            viewModel.onTrackingStarted = { [weak self] project in
+                self?.handleTrackingStarted(for: project)
+            }
+
+            return viewModel
+        }
     }
-  }
-  
-  private func updateProjectRowViewModels() {
-    projectRowViewModels = projects.map { project in
-      let viewModel = ProjectRowViewModel(
-        project: project,
-        projectRepository: projectRepository,
-        timeRecordRepository: timeRecordRepository,
-        jobRepository: jobRepository
-      )
-      
-      // コールバックを設定
-      viewModel.onProjectDeleted = { [weak self] deletedProject in
-        self?.handleProjectDeleted(deletedProject)
-      }
-      
-      viewModel.onTrackingStarted = { [weak self] project in
-        self?.handleTrackingStarted(for: project)
-      }
-      
-      return viewModel
+
+    private func updateProjectRowActiveStates() {
+        projectRowViewModels.forEach { $0.updateActiveStatus() }
     }
-  }
-  
-  private func updateProjectRowActiveStates() {
-    projectRowViewModels.forEach { $0.updateActiveStatus() }
-  }
-  
-  // MARK: - Project Management
-  
-  func showAddProject() {
-    showingAddProject = true
-  }
-  
-  func hideAddProject() {
-    showingAddProject = false
-  }
-  
-  private func handleProjectCreated(_ newProject: Project) {
-    loadData() // データを再読み込み
-    hideAddProject()
-  }
-  
-  private func handleProjectDeleted(_ deletedProject: Project) {
-    loadData() // データを再読み込み
-  }
-  
-  private func handleTrackingStarted(for project: Project) {
-    if let currentRecord = withLoadingSync({
-      try timeRecordRepository.fetchCurrentTimeRecord()
-    }) {
-      currentTimeRecord = currentRecord
+
+    // MARK: - Project Management
+
+    func showAddProject() {
+        showingAddProject = true
     }
-    
-    if errorMessage == nil {
-      // 統計データも更新
-      mainContentViewModel.refreshAllData()
+
+    func hideAddProject() {
+        showingAddProject = false
     }
-  }
-  
-  // MARK: - Time Tracking
-  
-  func stopTracking() {
-    withLoadingSync {
-      try timeRecordRepository.stopCurrentTimeRecord()
+
+    private func handleProjectCreated(_: Project) {
+        loadData() // データを再読み込み
+        hideAddProject()
     }
-    
-    if errorMessage == nil {
-      if let currentRecord = withLoadingSync({
-        try timeRecordRepository.fetchCurrentTimeRecord()
-      }) {
-        currentTimeRecord = currentRecord
-      }
-      
-      // データを更新
-      mainContentViewModel.refreshAllData()
+
+    private func handleProjectDeleted(_: Project) {
+        loadData() // データを再読み込み
     }
-  }
-  
-  // MARK: - Helper Methods
-  
-  func getCurrentProjectName() -> String {
-    return currentTimeRecord?.displayProjectName ?? ""
-  }
-  
-  func getCurrentProjectColor() -> String {
-    return currentTimeRecord?.displayProjectColor ?? "blue"
-  }
-  
-  func getCurrentJobName() -> String {
-    return currentTimeRecord?.displayJobName ?? ""
-  }
-  
-  func getCurrentDuration() -> TimeInterval {
-    return currentTimeRecord?.duration ?? 0
-  }
-  
-  func getCurrentStartTime() -> Date? {
-    return currentTimeRecord?.startTime
-  }
-  
-  func isTracking() -> Bool {
-    return currentTimeRecord != nil
-  }
+
+    private func handleTrackingStarted(for _: Project) {
+        if let currentRecord = withLoadingSync({
+            try timeRecordRepository.fetchCurrentTimeRecord()
+        }) {
+            currentTimeRecord = currentRecord
+        }
+
+        if errorMessage == nil {
+            // 統計データも更新
+            mainContentViewModel.refreshAllData()
+        }
+    }
+
+    // MARK: - Time Tracking
+
+    func stopTracking() {
+        withLoadingSync {
+            try timeRecordRepository.stopCurrentTimeRecord()
+        }
+
+        if errorMessage == nil {
+            if let currentRecord = withLoadingSync({
+                try timeRecordRepository.fetchCurrentTimeRecord()
+            }) {
+                currentTimeRecord = currentRecord
+            }
+
+            // データを更新
+            mainContentViewModel.refreshAllData()
+        }
+    }
+
+    // MARK: - Helper Methods
+
+    func getCurrentProjectName() -> String {
+        return currentTimeRecord?.displayProjectName ?? ""
+    }
+
+    func getCurrentProjectColor() -> String {
+        return currentTimeRecord?.displayProjectColor ?? "blue"
+    }
+
+    func getCurrentJobName() -> String {
+        return currentTimeRecord?.displayJobName ?? ""
+    }
+
+    func getCurrentDuration() -> TimeInterval {
+        return currentTimeRecord?.duration ?? 0
+    }
+
+    func getCurrentStartTime() -> Date? {
+        return currentTimeRecord?.startTime
+    }
+
+    func isTracking() -> Bool {
+        return currentTimeRecord != nil
+    }
 }
