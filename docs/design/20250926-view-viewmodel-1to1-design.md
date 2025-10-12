@@ -9,28 +9,31 @@
 - **再利用性低**: 特定のViewで必要ない機能も含んでしまう
 
 ### 現在のView-ViewModel関係
-```
-TimeTrackingViewModel (1) → 複数View (N)
-├── ContentView
-├── MainContentView  
-├── StatisticsView
-├── HistoryView
-├── ProjectRowView
-├── AddProjectSheet
-├── HistoryRowView
-└── ProjectStatRowUpdated
+
+```mermaid
+graph TD
+    VM[TimeTrackingViewModel]
+    VM --> CV[ContentView]
+    VM --> MCV[MainContentView]
+    VM --> SV[StatisticsView]
+    VM --> HV[HistoryView]
+    VM --> PRV[ProjectRowView]
+    VM --> APS[AddProjectSheet]
+    VM --> HRV[HistoryRowView]
+    VM --> PSR[ProjectStatRowUpdated]
 ```
 
 ## 新しい設計
 
 ### 1対1対応の原則
-```
-View (1) ↔ ViewModel (1)
-- ContentViewModel ↔ ContentView
-- StatisticsViewModel ↔ StatisticsView  
-- HistoryViewModel ↔ HistoryView
-- ProjectListViewModel ↔ ProjectRowView
-- AddProjectViewModel ↔ AddProjectSheet
+
+```mermaid
+graph LR
+    CVM[ContentViewModel] <--> CV[ContentView]
+    SVM[StatisticsViewModel] <--> SV[StatisticsView]
+    HVM[HistoryViewModel] <--> HV[HistoryView]
+    PLVM[ProjectListViewModel] <--> PRV[ProjectRowView]
+    APVM[AddProjectViewModel] <--> APS[AddProjectSheet]
 ```
 
 ### 新しいViewModel構造
@@ -218,10 +221,13 @@ viewmodels/
 6. `ContentViewModel` (全体統合)
 
 ### 2. データフロー
-```
-Repository → ViewModel → View
-     ↑           ↓
-     └─── User Actions
+
+```mermaid
+graph LR
+    R[Repository] --> VM[ViewModel]
+    VM --> V[View]
+    V -->|User Actions| VM
+    VM -->|Data Updates| R
 ```
 
 ### 3. ViewModel間通信

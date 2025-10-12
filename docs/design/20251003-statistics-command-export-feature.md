@@ -53,49 +53,28 @@
 
 ### データフロー
 
-```
-TimeRecord (SwiftData)
-  ↓
-TimeRecordRepository.fetchTimeRecords()
-  ↓
-StatisticsViewModel.loadStatistics()
-  ↓ グループ化・集計
-StatisticsViewModel.projectJobDetails
-  ↓
-StatisticsViewModel.generateCommandText()
-  ↓
-StatisticsView (表示 + コピー)
+```mermaid
+flowchart TD
+    A[TimeRecord SwiftData] --> B[TimeRecordRepository.fetchTimeRecords]
+    B --> C[StatisticsViewModel.loadStatistics]
+    C --> D[グループ化・集計]
+    D --> E[StatisticsViewModel.projectJobDetails]
+    E --> F[StatisticsViewModel.generateCommandText]
+    F --> G[StatisticsView 表示 + コピー]
 ```
 
 ### コンポーネント間の関係
 
-```
-┌─────────────────────────────────────┐
-│      StatisticsView                 │
-│  - ForEach projectJobDetails        │
-│  - ProjectStatRowUpdated 呼び出し   │
-└──────────────┬──────────────────────┘
-               │ ObservedObject
-               ↓
-┌─────────────────────────────────────┐
-│   StatisticsViewModel               │
-│  - projectJobDetails                │
-│  - generateCommand(for:)            │
-│  - generateCommandText()            │
-└──────────────┬──────────────────────┘
-               │ Repository依存
-               ↓
-┌─────────────────────────────────────┐
-│  TimeRecordRepository               │
-│  - fetchTimeRecords()               │
-└─────────────────────────────────────┘
-               ↑
-               │ command パラメータ
-┌─────────────────────────────────────┐
-│   ProjectStatRowUpdated             │
-│  - コピーボタン                      │
-│  - フィードバック表示                │
-└─────────────────────────────────────┘
+```mermaid
+flowchart TD
+    SV[StatisticsView<br/>- ForEach projectJobDetails<br/>- ProjectStatRowUpdated 呼び出し]
+    VM[StatisticsViewModel<br/>- projectJobDetails<br/>- generateCommand for<br/>- generateCommandText]
+    TR[TimeRecordRepository<br/>- fetchTimeRecords]
+    PS[ProjectStatRowUpdated<br/>- コピーボタン<br/>- フィードバック表示]
+
+    SV -->|ObservedObject| VM
+    VM -->|Repository依存| TR
+    PS -->|command パラメータ| VM
 ```
 
 ## 詳細設計

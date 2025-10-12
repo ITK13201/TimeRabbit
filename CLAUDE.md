@@ -121,12 +121,20 @@ xcodebuild test -project TimeRabbit.xcodeproj -scheme TimeRabbit -destination 'p
 ### CI/CD
 - **GitHub Actions** workflows in `.github/workflows/`
 - **CI** (`ci.yml`): Runs tests on PR and main branch pushes
+  - Triggers: Swift file changes, project changes, workflow changes
+  - Uses macOS 15 runners with Xcode 16.4
+  - Code coverage enabled
 - **Release** (`release.yml`): Two-stage workflow (test → build-and-release) triggered by version tags (`v*.*.*`)
   - Uses macOS 15 runners with Xcode 16.4
   - Creates unsigned builds (no Apple Developer Program required)
   - Generates ZIP, DMG, and SHA256 checksums
   - Auto-publishes to GitHub Releases with generated release notes
+  - Includes Gatekeeper warning instructions in release notes
 - Test failures block releases (tests must pass before deployment)
+
+### Build Scripts
+- `scripts/create-dmg.sh`: DMG creation script for release builds
+- `exportOptions.plist`: Xcode export configuration
 
 ### Git Commit Message Convention
 All commit messages must follow this format:
@@ -151,9 +159,52 @@ All commit messages must follow this format:
 #8 docs: Update architecture documentation
 ```
 
+### Documentation Structure
+
+For comprehensive documentation, see [docs/README.md](docs/README.md).
+
+**Documentation Organization:**
+```
+docs/
+├── guides/          # ガイド（入門・概要）
+│   ├── getting-started.md      # Environment setup and first contribution
+│   ├── project-overview.md     # Architecture, tech stack, and design philosophy
+│   ├── architecture-guide.md   # MVVM, Repository pattern, dependency injection
+│   └── development-guide.md    # Git workflow, CI/CD, testing, release procedures
+├── reference/       # リファレンス（詳細仕様）
+│   ├── data-models.md          # Detailed model specifications
+│   ├── tech-stack.md           # Technology stack details
+│   ├── design-patterns.md      # Design pattern catalog
+│   └── directory-structure.md  # Directory structure details
+├── design/          # 設計書（時系列）
+│   ├── 20250926-view-viewmodel-1to1-design.md
+│   ├── 20250930-project-job-model-redesign.md
+│   ├── 20251008-project-job-systemid-design.md
+│   └── ... (historical design documents)
+└── operations/      # 運用ドキュメント
+    ├── ci-cd.md                # CI/CD configuration
+    └── release-procedure.md    # Release and deployment procedures
+```
+
+**Quick Links:**
+- **Getting Started**: [docs/guides/getting-started.md](docs/guides/getting-started.md) - クイックスタートガイド
+- **Project Overview**: [docs/guides/project-overview.md](docs/guides/project-overview.md) - プロジェクト全体概要
+- **Architecture Guide**: [docs/guides/architecture-guide.md](docs/guides/architecture-guide.md) - アーキテクチャ詳細
+- **Development Guide**: [docs/guides/development-guide.md](docs/guides/development-guide.md) - 開発フロー
+- **Data Models**: [docs/reference/data-models.md](docs/reference/data-models.md) - データモデル詳細
+- **Design Patterns**: [docs/reference/design-patterns.md](docs/reference/design-patterns.md) - 設計パターンカタログ
+- **Design History**: [docs/design/](docs/design/) - 時系列設計ドキュメント
+- **CI/CD**: [docs/operations/ci-cd.md](docs/operations/ci-cd.md) - CI/CD設定
+- **Release Procedure**: [docs/operations/release-procedure.md](docs/operations/release-procedure.md) - リリース手順
+
+**Documentation Standards:**
+- **Diagrams**: All diagrams use Mermaid (flowcharts, sequence diagrams, ER diagrams) or ```text``` blocks (UI layouts, tree structures) for consistent rendering across platforms
+- **Languages**: Guides and design documents in Japanese; code and commit messages in English
+- **File Naming**: Design documents use `YYYYMMDD-topic-type.md` format for time-series management
+
 ### Release Procedure
 
-**Quick Reference** (see [docs/operations/release-deployment-procedure.md](docs/operations/release-deployment-procedure.md) for details):
+**Quick Reference** (see [docs/operations/release-procedure.md](docs/operations/release-procedure.md) for details):
 
 1. **Prepare develop branch**: Ensure all tests pass and changes are committed
 2. **Create PR to main**: Use `gh pr create --base main --head develop` with `Closes #XX` in body
