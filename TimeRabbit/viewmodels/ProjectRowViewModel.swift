@@ -70,7 +70,7 @@ class ProjectRowViewModel: BaseViewModel {
         }
 
         if let _ = withLoadingSync({
-            try timeRecordRepository.startTimeRecord(for: project, job: selectedJob)
+            try timeRecordRepository.startTimeRecord(for: self.project, job: selectedJob)
         }) {
             isActive = true
             onTrackingStarted?(project)
