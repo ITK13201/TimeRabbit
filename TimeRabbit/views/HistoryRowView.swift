@@ -10,77 +10,77 @@ import SwiftData
 import SwiftUI
 
 struct HistoryRowView: View {
-  let record: TimeRecord
-  let onEdit: (TimeRecord) -> Void
-  let onDelete: (TimeRecord) -> Void
+    let record: TimeRecord
+    let onEdit: (TimeRecord) -> Void
+    let onDelete: (TimeRecord) -> Void
 
-  var body: some View {
-    HStack(spacing: 12) {
-      // プロジェクト色
-      Circle()
-        .fill(getProjectColor(from: record.displayProjectColor))
-        .frame(width: 12, height: 12)
+    var body: some View {
+        HStack(spacing: 12) {
+            // プロジェクト色
+            Circle()
+                .fill(getProjectColor(from: record.displayProjectColor))
+                .frame(width: 12, height: 12)
 
-      // プロジェクト名と作業区分
-      VStack(alignment: .leading, spacing: 4) {
-        Text(record.displayProjectName)
-          .font(.headline)
-        Text(record.displayJobName)
-          .font(.caption)
-          .foregroundColor(.secondary)
-      }
-      .frame(minWidth: 120, alignment: .leading)
+            // プロジェクト名と作業区分
+            VStack(alignment: .leading, spacing: 4) {
+                Text(record.displayProjectName)
+                    .font(.headline)
+                Text(record.displayJobName)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .frame(minWidth: 120, alignment: .leading)
 
-      Spacer()
+            Spacer()
 
-      // 時間情報
-      VStack(alignment: .trailing, spacing: 2) {
-        HStack(spacing: 4) {
-          Text(formatTimeOnly(record.startTime))
-          Text("〜")
-            .foregroundColor(.secondary)
-          Text(formatTimeOnly(record.endTime ?? Date()))
+            // 時間情報
+            VStack(alignment: .trailing, spacing: 2) {
+                HStack(spacing: 4) {
+                    Text(formatTimeOnly(record.startTime))
+                    Text("〜")
+                        .foregroundColor(.secondary)
+                    Text(formatTimeOnly(record.endTime ?? Date()))
+                }
+                .font(.subheadline)
+                .foregroundColor(.primary)
+
+                Text(formatDuration(record.duration))
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+            }
+
+            // 編集ボタン
+            Button(action: {
+                onEdit(record)
+            }) {
+                Image(systemName: "pencil")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .frame(width: 40, height: 40)
+                    .background(Color.secondary.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(PlainButtonStyle())
+            .contentShape(Rectangle())
         }
-        .font(.subheadline)
-        .foregroundColor(.primary)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(record.endTime == nil ? Color.green.opacity(0.1) : Color(nsColor: .controlBackgroundColor))
+        .cornerRadius(8)
+        .contextMenu {
+            Button("編集") {
+                onEdit(record)
+            }
 
-        Text(formatDuration(record.duration))
-          .font(.caption)
-          .fontWeight(.medium)
-          .foregroundColor(.secondary)
-      }
-      
-      // 編集ボタン
-      Button(action: {
-        onEdit(record)
-      }) {
-        Image(systemName: "pencil")
-          .font(.system(size: 14, weight: .medium))
-          .foregroundColor(.secondary)
-          .frame(width: 40, height: 40)
-          .background(Color.secondary.opacity(0.1))
-          .clipShape(RoundedRectangle(cornerRadius: 8))
-      }
-      .buttonStyle(PlainButtonStyle())
-      .contentShape(Rectangle())
-    }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 12)
-    .background(record.endTime == nil ? Color.green.opacity(0.1) : Color(nsColor: .controlBackgroundColor))
-    .cornerRadius(8)
-    .contextMenu {
-      Button("編集") {
-        onEdit(record)
-      }
+            // 作業中のレコードは削除不可
+            if record.endTime != nil {
+                Divider()
 
-      // 作業中のレコードは削除不可
-      if record.endTime != nil {
-        Divider()
-
-        Button("削除", role: .destructive) {
-          onDelete(record)
+                Button("削除", role: .destructive) {
+                    onDelete(record)
+                }
+            }
         }
-      }
     }
-  }
 }
