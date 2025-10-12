@@ -398,9 +398,12 @@ final class TimeRecord {
 - データ損失の防止
 - 削除後も履歴の完全性を維持
 
-### 4. 共有状態管理（DateService）
+### 4. 共有状態管理（Services Layer）
 
-統計画面と履歴画面の日付選択を同期するための専用サービス：
+アプリケーション全体で使用される共通サービスを`services/`ディレクトリに集約しています。
+
+#### DateService
+統計画面と履歴画面の日付選択を同期：
 
 ```swift
 @MainActor
@@ -408,6 +411,21 @@ class DateService: ObservableObject {
   @Published var selectedDate: Date = Calendar.current.startOfDay(for: Date())
 }
 ```
+
+#### Logger (AppLogger)
+OSLogベースの構造化ロギング：
+
+```swift
+AppLogger.viewModel.debug("Action performed")
+AppLogger.repository.info("Data saved")
+AppLogger.app.error("Error occurred: \(error)")
+```
+
+**カテゴリ:**
+- `app`: アプリケーションレベル
+- `repository`: リポジトリ操作
+- `viewModel`: ViewModel操作
+- `swiftData`: SwiftData操作
 
 ### 5. テスト駆動開発（TDD思考）
 
@@ -428,6 +446,31 @@ func testCreateProject() {
   // ...
 }
 ```
+
+### 6. コード品質管理
+
+#### SwiftFormat
+プロジェクト全体で統一されたコードスタイルを保証：
+
+- `.swiftformat`設定ファイルで一元管理
+- `--self insert`: 全メンバー参照に明示的な`self.`を追加（Swift 6互換性）
+- Pre-pushフックで自動チェック
+
+```bash
+# 手動フォーマット
+swiftformat .
+
+# チェックのみ
+swiftformat --lint .
+```
+
+#### Pre-push フック
+Push前に自動的に以下をチェック：
+
+1. **SwiftFormat**: コードフォーマット
+2. **Unit Tests**: 全ユニットテスト実行
+
+フォーマットやテストが失敗した場合、Pushはブロックされます。
 
 ---
 
