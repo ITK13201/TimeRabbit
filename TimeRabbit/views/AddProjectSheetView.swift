@@ -10,76 +10,76 @@ import SwiftData
 import SwiftUI
 
 struct AddProjectSheetView: View {
-    @StateObject private var viewModel: AddProjectViewModel
+  @StateObject private var viewModel: AddProjectViewModel
 
-    init(viewModel: AddProjectViewModel) {
-        _viewModel = StateObject(wrappedValue: viewModel)
-    }
+  init(viewModel: AddProjectViewModel) {
+    _viewModel = StateObject(wrappedValue: viewModel)
+  }
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("新しい案件")
-                .font(.title2)
-                .fontWeight(.bold)
+  var body: some View {
+    VStack(alignment: .leading, spacing: 16) {
+      Text("新しい案件")
+        .font(.title2)
+        .fontWeight(.bold)
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text("案件ID")
-                TextField("案件IDを入力", text: self.$viewModel.projectId)
-                    .textFieldStyle(.roundedBorder)
+      VStack(alignment: .leading, spacing: 8) {
+        Text("案件ID")
+        TextField("案件IDを入力", text: self.$viewModel.projectId)
+          .textFieldStyle(.roundedBorder)
 
-                if !self.viewModel.idValidationMessage.isEmpty {
-                    Text(self.viewModel.idValidationMessage)
-                        .font(.caption)
-                        .foregroundColor(.red)
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("案件名")
-                TextField("案件名を入力", text: self.$viewModel.projectName)
-                    .textFieldStyle(.roundedBorder)
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("色")
-                HStack {
-                    ForEach(self.viewModel.availableColors, id: \.self) { color in
-                        Button(action: { self.viewModel.selectColor(color) }) {
-                            Circle()
-                                .fill(getProjectColor(from: color))
-                                .frame(width: 24, height: 24)
-                                .overlay(
-                                    Circle()
-                                        .stroke(self.viewModel.isColorSelected(color) ? Color.primary : Color.clear, lineWidth: 2)
-                                )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-
-            HStack {
-                Button("キャンセル") {
-                    self.viewModel.cancel()
-                }
-                Spacer()
-                Button("作成") {
-                    self.viewModel.createProject()
-                }
-                .disabled(!self.viewModel.isFormValid || !self.viewModel.isIdValid)
-                .buttonStyle(.borderedProminent)
-            }
+        if !self.viewModel.idValidationMessage.isEmpty {
+          Text(self.viewModel.idValidationMessage)
+            .font(.caption)
+            .foregroundColor(.red)
         }
-        .padding()
-        .frame(width: 300)
-        .alert("エラー", isPresented: .constant(self.viewModel.errorMessage != nil)) {
-            Button("OK") {
-                self.viewModel.clearError()
+      }
+
+      VStack(alignment: .leading, spacing: 8) {
+        Text("案件名")
+        TextField("案件名を入力", text: self.$viewModel.projectName)
+          .textFieldStyle(.roundedBorder)
+      }
+
+      VStack(alignment: .leading, spacing: 8) {
+        Text("色")
+        HStack {
+          ForEach(self.viewModel.availableColors, id: \.self) { color in
+            Button(action: { self.viewModel.selectColor(color) }) {
+              Circle()
+                .fill(getProjectColor(from: color))
+                .frame(width: 24, height: 24)
+                .overlay(
+                  Circle()
+                    .stroke(self.viewModel.isColorSelected(color) ? Color.primary : Color.clear, lineWidth: 2)
+                )
             }
-        } message: {
-            if let error = viewModel.errorMessage {
-                Text(error)
-            }
+            .buttonStyle(.plain)
+          }
         }
+      }
+
+      HStack {
+        Button("キャンセル") {
+          self.viewModel.cancel()
+        }
+        Spacer()
+        Button("作成") {
+          self.viewModel.createProject()
+        }
+        .disabled(!self.viewModel.isFormValid || !self.viewModel.isIdValid)
+        .buttonStyle(.borderedProminent)
+      }
     }
+    .padding()
+    .frame(width: 300)
+    .alert("エラー", isPresented: .constant(self.viewModel.errorMessage != nil)) {
+      Button("OK") {
+        self.viewModel.clearError()
+      }
+    } message: {
+      if let error = viewModel.errorMessage {
+        Text(error)
+      }
+    }
+  }
 }

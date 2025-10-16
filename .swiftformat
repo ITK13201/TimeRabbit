@@ -4,6 +4,9 @@
 # Version
 --swiftversion 5.0
 
+# Indentation
+--indent 2
+
 # Rules
 --enable isEmpty
 --enable sortImports
