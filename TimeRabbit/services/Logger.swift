@@ -10,37 +10,37 @@ import os.log
 
 /// Application-wide logging system using OSLog with categorized loggers
 enum AppLogger {
-    // MARK: - Log Categories
+  // MARK: - Log Categories
 
-    /// General application lifecycle and main operations
-    static let app = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "dev.i-tk.TimeRabbit", category: "App"
-    )
+  /// General application lifecycle and main operations
+  static let app = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "dev.i-tk.TimeRabbit", category: "App"
+  )
 
-    /// Repository layer operations and data persistence
-    static let repository = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "dev.i-tk.TimeRabbit", category: "Repository"
-    )
+  /// Repository layer operations and data persistence
+  static let repository = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "dev.i-tk.TimeRabbit", category: "Repository"
+  )
 
-    /// SwiftData specific operations and errors
-    static let swiftData = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "dev.i-tk.TimeRabbit", category: "SwiftData"
-    )
+  /// SwiftData specific operations and errors
+  static let swiftData = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "dev.i-tk.TimeRabbit", category: "SwiftData"
+  )
 
-    /// ViewModel operations and business logic
-    static let viewModel = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "dev.i-tk.TimeRabbit", category: "ViewModel"
-    )
+  /// ViewModel operations and business logic
+  static let viewModel = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "dev.i-tk.TimeRabbit", category: "ViewModel"
+  )
 
-    /// UI operations and user interactions
-    static let ui = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "dev.i-tk.TimeRabbit", category: "UI"
-    )
+  /// UI operations and user interactions
+  static let ui = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "dev.i-tk.TimeRabbit", category: "UI"
+  )
 
-    /// Database operations and data validation
-    static let database = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "dev.i-tk.TimeRabbit", category: "Database"
-    )
+  /// Database operations and data validation
+  static let database = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "dev.i-tk.TimeRabbit", category: "Database"
+  )
 }
 
 // MARK: - Usage Notes
