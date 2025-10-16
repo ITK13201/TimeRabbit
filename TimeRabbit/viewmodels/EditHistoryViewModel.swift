@@ -24,10 +24,18 @@ class EditHistoryViewModel: BaseViewModel {
     @Published var showingDeleteAlert = false
     @Published var availableProjects: [Project] = []
     @Published var availableJobs: [Job] = []
+    @Published var isEditingInProgressRecord: Bool = false
 
     // MARK: - Computed Properties
 
     var isValidTimeRange: Bool {
+        // 作業中レコードの場合は開始時間のみチェック
+        if self.isEditingInProgressRecord {
+            // 開始時間が現在時刻より前であればOK
+            return self.startTime <= Date()
+        }
+
+        // 完了済みレコードの場合は既存のバリデーション
         guard self.startTime < self.endTime else { return false }
         guard self.endTime <= Date() else { return false }
 
@@ -86,7 +94,18 @@ class EditHistoryViewModel: BaseViewModel {
         self.selectedProject = record.project
         self.selectedJob = record.job
         self.startTime = record.startTime
-        self.endTime = record.endTime ?? Date()
+
+        // 作業中レコードの判定と保持
+        if let endTime = record.endTime {
+            // 完了済みレコード: 既存のendTimeを使用
+            self.endTime = endTime
+            self.isEditingInProgressRecord = false
+        } else {
+            // 作業中レコード: 現在時刻をUI表示用に設定（保存時は使用しない）
+            self.endTime = Date()
+            self.isEditingInProgressRecord = true
+        }
+
         self.showingEditSheet = true
         clearError()
 
@@ -105,10 +124,13 @@ class EditHistoryViewModel: BaseViewModel {
         }
 
         withLoadingSync {
+            // 作業中レコードの場合はendTime: nil、完了済みの場合はendTime: Date
+            let finalEndTime = self.isEditingInProgressRecord ? nil : self.endTime
+
             try self.timeRecordRepository.updateTimeRecord(
                 record,
                 startTime: self.startTime,
-                endTime: self.endTime,
+                endTime: finalEndTime,
                 project: project,
                 job: job
             )
@@ -188,6 +210,7 @@ class EditHistoryViewModel: BaseViewModel {
         self.selectedJob = nil
         self.startTime = Date()
         self.endTime = Date()
+        self.isEditingInProgressRecord = false
         self.availableProjects = []
         self.availableJobs = []
     }
@@ -197,9 +220,10 @@ class EditHistoryViewModel: BaseViewModel {
     func validateTimeRange() -> String? {
         do {
             guard let record = editingRecord else { return nil }
+            let finalEndTime = self.isEditingInProgressRecord ? nil : self.endTime
             _ = try self.timeRecordRepository.validateTimeRange(
                 startTime: self.startTime,
-                endTime: self.endTime,
+                endTime: finalEndTime,
                 excludingRecord: record
             )
             return nil

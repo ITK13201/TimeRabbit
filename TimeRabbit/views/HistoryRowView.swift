@@ -39,7 +39,9 @@ struct HistoryRowView: View {
                     Text(formatTimeOnly(self.record.startTime))
                     Text("〜")
                         .foregroundColor(.secondary)
-                    Text(formatTimeOnly(self.record.endTime ?? Date()))
+                    if let endTime = self.record.endTime {
+                        Text(formatTimeOnly(endTime))
+                    }
                 }
                 .font(.subheadline)
                 .foregroundColor(.primary)

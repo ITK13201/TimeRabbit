@@ -83,7 +83,7 @@ class MockTimeRecordRepository: TimeRecordRepositoryProtocol {
         }
     }
 
-    func updateTimeRecord(_ record: TimeRecord, startTime: Date, endTime: Date, project: Project, job: Job) throws {
+    func updateTimeRecord(_ record: TimeRecord, startTime: Date, endTime: Date?, project: Project, job: Job) throws {
         guard try self.validateTimeRange(startTime: startTime, endTime: endTime, excludingRecord: record) else {
             throw TimeRecordError.invalidTimeRange
         }
@@ -99,7 +99,16 @@ class MockTimeRecordRepository: TimeRecordRepositoryProtocol {
         record.backupJobName = job.name
     }
 
-    func validateTimeRange(startTime: Date, endTime: Date, excludingRecord: TimeRecord? = nil) throws -> Bool {
+    func validateTimeRange(startTime: Date, endTime: Date?, excludingRecord: TimeRecord? = nil) throws -> Bool {
+        // 作業中レコード（endTime == nil）の場合は開始時間のみチェック
+        guard let endTime = endTime else {
+            guard startTime <= Date() else {
+                throw TimeRecordError.futureTime
+            }
+            return true
+        }
+
+        // 完了済みレコードの場合は既存のバリデーション
         // 基本的なバリデーション
         guard startTime < endTime else {
             throw TimeRecordError.startTimeAfterEndTime

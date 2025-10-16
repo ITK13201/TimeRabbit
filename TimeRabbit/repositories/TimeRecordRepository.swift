@@ -17,8 +17,8 @@ protocol TimeRecordRepositoryProtocol {
     func fetchCurrentTimeRecord() throws -> TimeRecord?
     func fetchTimeRecords(for project: Project?, from startDate: Date, to endDate: Date) throws -> [TimeRecord]
     func deleteTimeRecord(_ record: TimeRecord) throws
-    func updateTimeRecord(_ record: TimeRecord, startTime: Date, endTime: Date, project: Project, job: Job) throws
-    func validateTimeRange(startTime: Date, endTime: Date, excludingRecord: TimeRecord?) throws -> Bool
+    func updateTimeRecord(_ record: TimeRecord, startTime: Date, endTime: Date?, project: Project, job: Job) throws
+    func validateTimeRange(startTime: Date, endTime: Date?, excludingRecord: TimeRecord?) throws -> Bool
 }
 
 // MARK: - Time Record Repository Implementation
@@ -110,7 +110,7 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
         }
     }
 
-    func updateTimeRecord(_ record: TimeRecord, startTime: Date, endTime: Date, project: Project, job: Job) throws {
+    func updateTimeRecord(_ record: TimeRecord, startTime: Date, endTime: Date?, project: Project, job: Job) throws {
         AppLogger.repository.debug("updateTimeRecord started")
         AppLogger.repository.debug("Original record ID: \(record.id)")
         AppLogger.repository.debug("Original record project: \(record.project?.name ?? "nil")")
@@ -118,7 +118,7 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
         AppLogger.repository.debug("New project: \(project.name)")
         AppLogger.repository.debug("New job: \(job.name)")
         AppLogger.repository.debug("New startTime: \(startTime)")
-        AppLogger.repository.debug("New endTime: \(endTime)")
+        AppLogger.repository.debug("New endTime: \(endTime?.description ?? "nil")")
 
         guard try self.validateTimeRange(startTime: startTime, endTime: endTime, excludingRecord: record) else {
             AppLogger.repository.warning("Validation failed for time range")
@@ -128,7 +128,7 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
 
         // 保存前の状態をログ
         AppLogger.repository.debug("Before update - record.startTime: \(record.startTime)")
-        AppLogger.repository.debug("Before update - record.endTime: \(record.endTime ?? Date())")
+        AppLogger.repository.debug("Before update - record.endTime: \(record.endTime?.description ?? "nil")")
         AppLogger.repository.debug("Before update - record.project: \(record.project?.name ?? "nil")")
         AppLogger.repository.debug("Before update - record.job: \(record.job?.name ?? "nil")")
 
@@ -144,7 +144,7 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
 
         // 保存後の状態をログ
         AppLogger.repository.debug("After update - record.startTime: \(record.startTime)")
-        AppLogger.repository.debug("After update - record.endTime: \(record.endTime ?? Date())")
+        AppLogger.repository.debug("After update - record.endTime: \(record.endTime?.description ?? "nil")")
         AppLogger.repository.debug("After update - record.project: \(record.project?.name ?? "nil")")
         AppLogger.repository.debug("After update - record.job: \(record.job?.name ?? "nil")")
         AppLogger.swiftData.debug("About to save to ModelContext")
@@ -170,11 +170,23 @@ class TimeRecordRepository: TimeRecordRepositoryProtocol, ObservableObject {
         AppLogger.repository.debug("updateTimeRecord completed")
     }
 
-    func validateTimeRange(startTime: Date, endTime: Date, excludingRecord: TimeRecord? = nil) throws -> Bool {
+    func validateTimeRange(startTime: Date, endTime: Date?, excludingRecord: TimeRecord? = nil) throws -> Bool {
         AppLogger.repository.debug("validateTimeRange started")
-        AppLogger.repository.debug("Validating startTime: \(startTime), endTime: \(endTime)")
+        AppLogger.repository.debug("Validating startTime: \(startTime), endTime: \(endTime?.description ?? "nil")")
         AppLogger.repository.debug("Excluding record ID: \(excludingRecord?.id.description ?? "none")")
 
+        // 作業中レコード（endTime == nil）の場合は開始時間のみチェック
+        guard let endTime = endTime else {
+            AppLogger.repository.debug("In-progress record validation (endTime is nil)")
+            guard startTime <= Date() else {
+                AppLogger.repository.warning("VALIDATION FAILED: startTime is in future")
+                throw TimeRecordError.futureTime
+            }
+            AppLogger.repository.debug("✓ In-progress record validation passed")
+            return true
+        }
+
+        // 完了済みレコードの場合は既存のバリデーション
         // 基本的なバリデーション
         guard startTime < endTime else {
             AppLogger.repository.warning("VALIDATION FAILED: startTime >= endTime")

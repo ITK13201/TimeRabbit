@@ -243,6 +243,42 @@ let viewModel = factory.createYourViewModel()
 5. **History**: Date-filtered records with editing capabilities
 6. **Data Persistence**: SwiftData with proper relationships
 
+## Project Structure
+
+```
+TimeRabbit/
+├── TimeRabbitApp.swift          # App entry point
+├── Models.swift                 # SwiftData models (Project, Job, TimeRecord)
+├── repositories/                # Data persistence layer
+│   ├── ProjectRepository.swift
+│   ├── TimeRecordRepository.swift
+│   ├── JobRepository.swift
+│   └── Mock*.swift             # Mock implementations for testing/previews
+├── viewmodels/                 # Presentation layer (1:1 with Views)
+│   ├── base/
+│   │   ├── BaseViewModel.swift      # Common functionality
+│   │   └── ViewModelFactory.swift   # Dependency injection
+│   ├── ContentViewModel.swift
+│   ├── MainContentViewModel.swift
+│   ├── ProjectRowViewModel.swift
+│   ├── StatisticsViewModel.swift
+│   ├── HistoryViewModel.swift
+│   ├── EditHistoryViewModel.swift
+│   └── AddProjectViewModel.swift
+├── views/                      # UI layer (SwiftUI)
+│   ├── ContentView.swift
+│   ├── MainContentView.swift
+│   ├── ProjectRowView.swift
+│   ├── StatisticsView.swift
+│   ├── HistoryView.swift
+│   ├── EditHistorySheetView.swift
+│   └── AddProjectSheetView.swift
+├── services/
+│   ├── DateService.swift       # Shared date management
+│   └── Logger.swift           # OSLog-based logging (AppLogger)
+└── Utils.swift                 # Date/time formatting, color utilities
+```
+
 ## Documentation
 
 Comprehensive documentation available in [docs/](docs/):
@@ -264,10 +300,11 @@ Full documentation index: [docs/README.md](docs/README.md)
 
 ## CI/CD
 
-- **CI** (`ci.yml`): Format check and tests on PR/main push (macOS 15, Xcode 16.4)
-  - `format-check` job: Validates SwiftFormat compliance (blocks if unformatted)
-  - `test` job: Runs unit tests (requires format-check to pass)
-- **Release** (`release.yml`): Two-stage workflow triggered by `v*.*.*` tags
-  - Test → Build → Package (ZIP, DMG, SHA256)
-  - Auto-publishes to GitHub Releases
-  - Unsigned builds (no Apple Developer Program)
+- **CI** (`ci.yml`): Format check and tests on PR/main push
+  - Environment: macOS 15, Xcode 16.1+
+  - `format-check` job: Validates SwiftFormat compliance (blocks merge if unformatted)
+  - `test` job: Runs unit tests (requires format-check to pass first)
+- **Release** (`release.yml`): Automated workflow triggered by `v*.*.*` tags
+  - Pipeline: Test → Build → Package (ZIP, DMG, SHA256 checksums)
+  - Auto-publishes release artifacts to GitHub Releases
+  - Note: Unsigned builds (no Apple Developer Program certificate)
